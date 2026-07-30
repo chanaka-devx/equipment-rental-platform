@@ -65,6 +65,13 @@ export class AuthService {
     
     return {
       access_token: await this.jwtService.signAsync(payload),
+      refresh_token: await this.jwtService.signAsync(
+        { sub: user.id },
+        {
+          secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret',
+          expiresIn: (process.env.JWT_REFRESH_EXPIRY || '7d') as any,
+        },
+      ),
       user: {
         id: user.id,
         name: user.name,
@@ -72,5 +79,31 @@ export class AuthService {
         role: user.role
       }
     };
+  }
+
+  async refresh(refreshToken: string) {
+    try {
+      const payload = this.jwtService.verify(refreshToken, { secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret' });
+      const accessToken = this.jwtService.sign(
+        { sub: payload.sub, role: payload.role },
+        { secret: process.env.JWT_ACCESS_SECRET || 'secret', expiresIn: (process.env.JWT_ACCESS_EXPIRY || '15m') as any },
+      );
+      return { access_token: accessToken };
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) return { message: 'If that email exists, a reset link was sent.' }; // don't leak existence
+
+    const resetToken = this.jwtService.sign(
+      { sub: user.id },
+      { secret: process.env.JWT_ACCESS_SECRET || 'secret', expiresIn: '15m' },
+    );
+
+    console.log(`Password reset link: http://localhost:3000/reset-password?token=${resetToken}`);
+    return { message: 'If that email exists, a reset link was sent.' };
   }
 }
