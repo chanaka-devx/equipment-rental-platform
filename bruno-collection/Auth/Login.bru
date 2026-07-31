@@ -12,7 +12,7 @@ post {
 
 body:json {
   {
-    "email": "admin@test.com",
+    "email": "staff@test.com",
     "password": "Password123!"
   }
 }
@@ -20,8 +20,8 @@ body:json {
 script:post-response {
   if (res.getStatus() === 200 || res.getStatus() === 201) {
     const body = res.getBody();
-    if (body.accessToken) {
-      bru.setEnvVar("access_token", body.accessToken);
+    if (body.access_token) {
+      bru.setVar("access_token", body.access_token);
     }
   }
 }
