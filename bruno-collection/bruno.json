@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Equipment Rental API",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
