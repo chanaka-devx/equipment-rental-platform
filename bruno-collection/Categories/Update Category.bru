@@ -1,0 +1,25 @@
+meta {
+  name: Update Category
+  type: http
+  seq: 4
+}
+
+patch {
+  url: http://localhost:3000/categories/:id
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: e06cc794-e0b7-477c-872f-583f5c5d0be3
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "name": "Drones"
+  }
+}

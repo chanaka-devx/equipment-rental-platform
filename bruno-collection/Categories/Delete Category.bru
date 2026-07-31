@@ -1,0 +1,19 @@
+meta {
+  name: Delete Category
+  type: http
+  seq: 5
+}
+
+delete {
+  url: http://localhost:3000/categories/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: 4fbf69cc-5acc-4633-b0d3-55a5e79ca248
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
