@@ -84,8 +84,15 @@ export class AuthService {
   async refresh(refreshToken: string) {
     try {
       const payload = this.jwtService.verify(refreshToken, { secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret' });
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+      });
+      if (!user) {
+        throw new UnauthorizedException('User no longer exists');
+      }
+
       const accessToken = this.jwtService.sign(
-        { sub: payload.sub, role: payload.role },
+        { sub: user.id, email: user.email, role: user.role },
         { secret: process.env.JWT_ACCESS_SECRET || 'secret', expiresIn: (process.env.JWT_ACCESS_EXPIRY || '15m') as any },
       );
       return { access_token: accessToken };
