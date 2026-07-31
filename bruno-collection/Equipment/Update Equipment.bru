@@ -1,0 +1,25 @@
+meta {
+  name: Update Equipment
+  type: http
+  seq: 4
+}
+
+patch {
+  url: http://localhost:3000/equipment/:id
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: 59055769-6d8f-4cc2-a0fc-9daafdbb6067
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "images": ["https://pub-ec99c8a8fe684a6a931dd2f902e53e4b.r2.dev/EQUIPMENT_IMAGE/aeba4a7a-d6d2-4038-902a-1d772a2f947f/1785495165741-logo3.png"]
+  }
+}
