@@ -1,6 +1,6 @@
 import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../prisma/prisma.service';
+import { UserRepository } from './repositories/user.repository';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
+    private userRepository: UserRepository,
     private jwtService: JwtService,
   ) {}
 
@@ -16,9 +16,7 @@ export class AuthService {
     const { name, email, password } = registerDto;
 
     // Check if the user already exists
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await this.userRepository.findByEmail(email);
 
     if (existingUser) {
       throw new ConflictException('Email is already in use');
@@ -28,12 +26,10 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create the new user
-    const user = await this.prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
+    const user = await this.userRepository.create({
+      name,
+      email,
+      password: hashedPassword,
     });
 
     // Remove the password from the returned object
@@ -45,9 +41,7 @@ export class AuthService {
     const { email, password } = loginDto;
 
     // 1. Find user by email
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await this.userRepository.findByEmail(email);
 
     if (!user) {
       throw new UnauthorizedException('Invalid Email');
@@ -84,9 +78,8 @@ export class AuthService {
   async refresh(refreshToken: string) {
     try {
       const payload = this.jwtService.verify(refreshToken, { secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret' });
-      const user = await this.prisma.user.findUnique({
-        where: { id: payload.sub },
-      });
+      const user = await this.userRepository.findById(payload.sub);
+      
       if (!user) {
         throw new UnauthorizedException('User no longer exists');
       }
@@ -102,7 +95,7 @@ export class AuthService {
   }
 
   async forgotPassword(email: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.userRepository.findByEmail(email);
     if (!user) return { message: 'If that email exists, a reset link was sent.' }; // don't leak existence
 
     const resetToken = this.jwtService.sign(
