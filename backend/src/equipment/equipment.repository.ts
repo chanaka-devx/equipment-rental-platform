@@ -30,4 +30,19 @@ export class EquipmentRepository {
   delete(id: string) {
     return this.prisma.equipment.delete({ where: { id } });
   }
+
+  async getBookedQuantity(equipmentId: string, startDate: Date, endDate: Date): Promise<number> {
+    const result = await this.prisma.reservationItem.aggregate({
+      where: {
+        equipmentId,
+        reservation: {
+          status: { in: ['PENDING', 'APPROVED', 'ACTIVE'] },
+          startDate: { lte: endDate },
+          endDate: { gte: startDate },
+        },
+      },
+      _sum: { quantity: true },
+    });
+    return result._sum.quantity ?? 0;
+  }
 }

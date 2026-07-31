@@ -1,0 +1,19 @@
+meta {
+  name: Cancel Reservation
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{base_url}}/reservations/bb00b8d8-947f-44af-8ba3-e4938a12a266/cancel
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+vars:pre-request {
+  base_url: http://localhost:3000
+}

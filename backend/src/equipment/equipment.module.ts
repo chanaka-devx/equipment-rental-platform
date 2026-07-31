@@ -8,5 +8,6 @@ import { EquipmentRepository } from './equipment.repository';
   imports: [PrismaModule],
   controllers: [EquipmentController],
   providers: [EquipmentService, EquipmentRepository],
+  exports: [EquipmentRepository],
 })
 export class EquipmentModule {}
