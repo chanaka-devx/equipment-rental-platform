@@ -7,10 +7,25 @@ import { CategoriesModule } from './categories/categories.module';
 import { EquipmentModule } from './equipment/equipment.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { ReservationsModule } from './reservations/reservations.module';
+import { PaymentsModule } from './payments/payments.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { BullModule } from '@nestjs/bullmq';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import dotenv from 'dotenv';
+dotenv.config();
 
 @Module({
-  imports: [AuthModule, PrismaModule, CategoriesModule, EquipmentModule, UploadsModule, ReservationsModule],
+  imports: [
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
+      },
+    }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 20 }]),
+    AuthModule, PrismaModule, CategoriesModule, EquipmentModule, UploadsModule, ReservationsModule, PaymentsModule, InventoryModule, NotificationsModule],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

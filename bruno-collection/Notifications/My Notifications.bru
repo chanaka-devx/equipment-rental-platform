@@ -1,0 +1,15 @@
+meta {
+  name: My Notifications
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:3000/notifications/my-notifications
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}

@@ -1,0 +1,25 @@
+meta {
+  name: Release Equipment
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:3000/inventory/:id/release
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: 59055769-6d8f-4cc2-a0fc-9daafdbb6067
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "quantity": 2
+  }
+}

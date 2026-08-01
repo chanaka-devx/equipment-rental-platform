@@ -5,6 +5,7 @@ import { EquipmentRepository } from 'src/equipment/equipment.repository';
 import { ReservationsRepository } from './reservations.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ReservationStatus } from '@prisma/client';
+import { NotificationsService } from 'src/notifications/notifications.service';
 
 @Injectable()
 export class ReservationsService {
@@ -12,6 +13,7 @@ export class ReservationsService {
     private readonly prisma: PrismaService,
     private readonly equipmentRepo: EquipmentRepository,
     private readonly reservationsRepository: ReservationsRepository,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async findByUser(userId: string) {
@@ -77,6 +79,14 @@ export class ReservationsService {
       APPROVED: ['ACTIVE', 'CANCELLED'],
       ACTIVE: ['RETURNED'],
     };
+
+    const updated = await this.reservationsRepository.updateStatus(id, newStatus);
+
+    if (newStatus === 'APPROVED') {
+      await this.notificationsService.queueNotification(updated.userId, 'Your reservation has been approved!');
+    } else if (newStatus === 'REJECTED') {
+      await this.notificationsService.queueNotification(updated.userId, 'Your reservation was rejected.');
+    }
 
     if (!validTransitions[reservation.status]?.includes(newStatus)) {
       throw new BadRequestException(`Cannot transition from ${reservation.status} to ${newStatus}`);

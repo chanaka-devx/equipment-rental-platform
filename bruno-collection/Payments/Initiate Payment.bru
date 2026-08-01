@@ -1,0 +1,19 @@
+meta {
+  name: Initiate Payment
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/payments/:reservationId/initiate
+  body: none
+  auth: bearer
+}
+
+params:path {
+  reservationId: YOUR_RESERVATION_ID
+}
+
+auth:bearer {
+  token: {{access_token}}
+}

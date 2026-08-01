@@ -1,0 +1,25 @@
+meta {
+  name: Record Maintenance
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:3000/inventory/:id/maintenance
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: 59055769-6d8f-4cc2-a0fc-9daafdbb6067
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "note": "Fixed propeller, back in service"
+  }
+}
