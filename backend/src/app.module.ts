@@ -12,6 +12,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { BullModule } from '@nestjs/bullmq';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -24,6 +25,7 @@ dotenv.config();
       },
     }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 20 }]),
+    ScheduleModule.forRoot(),
     AuthModule, PrismaModule, CategoriesModule, EquipmentModule, UploadsModule, ReservationsModule, PaymentsModule, InventoryModule, NotificationsModule],
   controllers: [AppController],
   providers: [AppService],

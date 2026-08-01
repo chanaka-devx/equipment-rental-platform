@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ReservationsRepository } from 'src/reservations/reservations.repository';
 import { NotificationsService } from './notifications.service';
@@ -6,6 +6,7 @@ import { NotificationsService } from './notifications.service';
 @Injectable()
 export class NotificationsScheduler {
   constructor(
+    @Inject(forwardRef(() => ReservationsRepository))
     private reservationsRepository: ReservationsRepository,
     private notificationsService: NotificationsService,
   ) {}

@@ -5,13 +5,13 @@ meta {
 }
 
 post {
-  url: http://localhost:3000/payments/:reservationId/initiate
+  url: http://localhost:3000/v1/payments/:reservationId/initiate
   body: none
   auth: bearer
 }
 
 params:path {
-  reservationId: YOUR_RESERVATION_ID
+  reservationId: c75d0601-9920-41db-aaa6-92a53afe5a24
 }
 
 auth:bearer {

@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, UseGuards } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @Controller('payments')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
@@ -12,6 +13,7 @@ export class PaymentsController {
   initiate(@Param('reservationId') id: string) { return this.paymentsService.initiatePayment(id); }
 
   @Patch(':id/simulate')
+  @Roles('ADMIN')
   simulate(@Param('id') id: string, @Body('outcome') outcome: 'PAID' | 'FAILED') {
     return this.paymentsService.simulatePaymentResult(id, outcome);
   }
@@ -20,3 +22,4 @@ export class PaymentsController {
   @Roles('ADMIN', 'STAFF')
   refund(@Param('id') id: string) { return this.paymentsService.refund(id); }
 }
+

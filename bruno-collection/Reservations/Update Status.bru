@@ -1,0 +1,25 @@
+meta {
+  name: Update Status
+  type: http
+  seq: 6
+}
+
+patch {
+  url: http://localhost:3000/v1/reservations/:id/status
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: c75d0601-9920-41db-aaa6-92a53afe5a24
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "status": "APPROVED"
+  }
+}

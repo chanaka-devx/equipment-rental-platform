@@ -5,7 +5,7 @@ import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
-
+import { ReservationStatus } from '@prisma/client';
 @UseGuards(JwtAuthGuard)
 @Controller('reservations')
 export class ReservationsController {
@@ -36,5 +36,15 @@ export class ReservationsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.reservationsService.remove(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'STAFF')
+  @Patch(':id/status')
+  updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: ReservationStatus,
+  ) {
+    return this.reservationsService.updateStatus(id, status);
   }
 }

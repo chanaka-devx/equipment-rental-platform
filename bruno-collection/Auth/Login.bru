@@ -5,14 +5,14 @@ meta {
 }
 
 post {
-  url: http://localhost:3000/auth/login
+  url: http://localhost:3000/v1/auth/login
   body: json
   auth: none
 }
 
 body:json {
   {
-    "email": "staff@test.com",
+    "email": "admin@test.com",
     "password": "Password123!"
   }
 }

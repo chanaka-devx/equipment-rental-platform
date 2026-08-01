@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { CreateReservationDto, ReservationItemDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { EquipmentRepository } from 'src/equipment/equipment.repository';
@@ -13,6 +13,7 @@ export class ReservationsService {
     private readonly prisma: PrismaService,
     private readonly equipmentRepo: EquipmentRepository,
     private readonly reservationsRepository: ReservationsRepository,
+    @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
   ) {}
 
@@ -86,6 +87,8 @@ export class ReservationsService {
       await this.notificationsService.queueNotification(updated.userId, 'Your reservation has been approved!');
     } else if (newStatus === 'REJECTED') {
       await this.notificationsService.queueNotification(updated.userId, 'Your reservation was rejected.');
+    } else if (newStatus === 'RETURNED') {
+      await this.notificationsService.queueNotification(updated.userId, 'Your equipment has been returned successfully. Thank you!');
     }
 
     if (!validTransitions[reservation.status]?.includes(newStatus)) {
