@@ -1,0 +1,27 @@
+meta {
+  name: Create Equipment
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/v1/equipment
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "name": "DJI Mini",
+    "description": "Best known global brand; top models include the ultra-portable DJI Mini 4 Pro series",
+    "rentalPrice": 1500.00,
+    "deposit": 5000.00,
+    "stockQuantity": 5,
+    "categoryId": "e06cc794-e0b7-477c-872f-583f5c5d0be3",
+    "images": []
+  }
+}

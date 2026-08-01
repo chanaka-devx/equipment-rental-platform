@@ -1,0 +1,32 @@
+meta {
+  name: Create Reservation
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/reservations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "startDate": "2026-08-01T10:00:00Z",
+    "endDate": "2026-08-05T10:00:00Z",
+    "items": [
+      {
+        "equipmentId": "59055769-6d8f-4cc2-a0fc-9daafdbb6067",
+        "quantity": 1
+      }
+    ]
+  }
+}
+
+vars:pre-request {
+  base_url: http://localhost:3000
+}

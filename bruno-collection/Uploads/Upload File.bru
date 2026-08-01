@@ -1,0 +1,20 @@
+meta {
+  name: Upload File
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/v1/uploads
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:multipart-form {
+  file: @file(C:\Users\HP\Pictures\logo3.png)
+  type: EQUIPMENT_IMAGE
+}
