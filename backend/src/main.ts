@@ -15,6 +15,7 @@ async function bootstrap() {
     defaultVersion: '1',
   });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
+  app.setGlobalPrefix('v1');
   app.useGlobalInterceptors(new ActivityLogInterceptor(prismaService));
   app.enableCors();
   await app.listen(process.env.PORT ?? 3000);

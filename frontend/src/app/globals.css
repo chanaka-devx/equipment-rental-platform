@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand Identifiers */
+  --color-brand-dark: #0F172A;        /* Deep Slate for main headers and logos */
+  --color-brand-medium: #334155;      /* Secondary dark for structural elements */
+
+  /* UI Canvas Elements */
+  --color-background: #F8FAFC;        /* Soft canvas base to minimize eye glare */
+  --color-card: #FFFFFF;              /* Clean white cards to lift product photos */
+  --color-border: #E2E8F0;            /* Crisp divider lines for spec grids */
+
+  /* Typography (Fixed for AAA Contrast) */
+  --color-text-primary: #0F172A;      /* Darkest tone for product titles and prices */
+  --color-text-secondary: #475569;    /* Darkened from #64748B for crisp micro-copy and specs */
+
+  /* Action Elements (High-Utility Safety Orange) */
+  --color-accent: #F97316;            /* Attention-grabbing color for "Rent Now" buttons */
+  --color-accent-hover: #EA580C;      /* Deepened orange for interactive hover feedback */
+
+  /* Availability & Status Signals */
+  --color-success: #16A34A;           /* Vibrant green for "Available Now" badges */
+  --color-error: #DC2626; 
+
+  /* Custom Spacing */
+  --spacing-gutter: 24px;
+  --spacing-base: 4px;
+  --spacing-sm: 8px;
+  --spacing-margin-mobile: 16px;
+  --spacing-md: 16px;
+  --spacing-margin-desktop: 64px;
+  --spacing-lg: 24px;
+  --spacing-xl: 48px;
+  --spacing-xs: 4px;
+
+  /* Fonts */
+  --font-headline-md: var(--font-hanken), sans-serif;
+  --font-display-lg: var(--font-hanken), sans-serif;
+  --font-label-md: var(--font-jetbrains), monospace;
+  --font-headline-lg: var(--font-hanken), sans-serif;
+  --font-body-md: var(--font-inter), sans-serif;
+  --font-body-sm: var(--font-inter), sans-serif;
+  --font-body-lg: var(--font-inter), sans-serif;
+  --font-headline-lg-mobile: var(--font-hanken), sans-serif;
+  --font-label-sm: var(--font-jetbrains), monospace;
+
+  /* Typography */
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-md--font-weight: 600;
+
+  --text-display-lg: 48px;
+  --text-display-lg--line-height: 56px;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--font-weight: 700;
+
+  --text-label-md: 14px;
+  --text-label-md--line-height: 20px;
+  --text-label-md--font-weight: 500;
+
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--letter-spacing: -0.01em;
+  --text-headline-lg--font-weight: 600;
+
+  --text-body-md: 16px;
+  --text-body-md--line-height: 24px;
+  --text-body-md--font-weight: 400;
+
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 20px;
+  --text-body-sm--font-weight: 400;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+  --text-body-lg--font-weight: 400;
+
+  --text-headline-lg-mobile: 24px;
+  --text-headline-lg-mobile--line-height: 32px;
+  --text-headline-lg-mobile--font-weight: 600;
+
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-label-sm--font-weight: 500;
+}
+
+.material-symbols-outlined {
+  font-variation-settings:
+  'FILL' 0,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 24;
+}
