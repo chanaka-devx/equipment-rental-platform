@@ -4,15 +4,27 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) router.push('/login');
-    else if (allowedRoles && !allowedRoles.includes(user.role)) router.push('/dashboard');
-  }, [user]);
+    if (!loading) {
+      if (!user) router.push('/login');
+      else if (allowedRoles && !allowedRoles.includes(user.role)) router.push('/dashboard');
+    }
+  }, [user, loading, allowedRoles, router]);
 
-  if (!user) return null;
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+        <div className="flex items-center gap-2 text-slate-600 font-medium">
+          <span className="material-symbols-outlined animate-spin text-2xl text-[#F97316]">progress_activity</span>
+          <span>Loading session...</span>
+        </div>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 }
 

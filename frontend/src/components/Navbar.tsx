@@ -2,23 +2,41 @@
 
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  const [catBarVisible, setCatBarVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      if (currentY < 10) {
+        setCatBarVisible(true);
+      } else if (currentY > lastScrollY.current) {
+        // Scrolling down — hide
+        setCatBarVisible(false);
+      } else {
+        // Scrolling up — show
+        setCatBarVisible(true);
+      }
+      lastScrollY.current = currentY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const categories = [
-    { name: 'Earthmoving', href: '/equipment?category=earthmoving' },
-    { name: 'Aerial Lifts', href: '/equipment?category=aerial-lifts' },
-    { name: 'Compaction', href: '/equipment?category=compaction' },
-    { name: 'Generators & Power', href: '/equipment?category=generators' },
-    { name: 'Material Handling', href: '/equipment?category=material-handling' },
-    { name: 'Trucks & Trailers', href: '/equipment?category=trucks' },
-    { name: 'Concrete', href: '/equipment?category=concrete' },
-    { name: 'Tools & Other', href: '/equipment?category=tools' },
+    { name: 'Cameras & Photography', href: '/equipment?category=cameras-photography' },
+    { name: 'Drones', href: '/equipment?category=drones' },
+    { name: 'Power Tools', href: '/equipment?category=power-tools' },
+    { name: 'Construction Equipment', href: '/equipment?category=construction' },
+    { name: 'Event ', href: '/equipment?category=event' },
   ];
 
   return (
@@ -119,9 +137,16 @@ export default function Navbar() {
           </form>
         </div>
 
-        {/* Right Section: Account & Cart */}
+        {/* Right Section: Account & Reservation */}
         <div className="flex items-center gap-4 md:gap-6 shrink-0">
           
+          {/* Reservation*/}
+          <Link href="/reservations" className="flex items-center gap-2 text-[#F97316] hover:text-orange-600 transition-colors">
+            <span className="material-symbols-outlined text-2xl">book_online</span>
+            <span className="font-bold text-sm hidden sm:inline flex items-center gap-0.5">
+              My Reservations 
+            </span>
+          </Link>
 
           {/* User Account */}
           <div className="relative">
@@ -170,14 +195,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Cart */}
-          <Link href="/reservations" className="flex items-center gap-2 text-[#F97316] hover:text-orange-600 transition-colors">
-            <span className="material-symbols-outlined text-2xl">shopping_cart</span>
-            <span className="font-bold text-sm hidden sm:inline flex items-center gap-0.5">
-              My Cart <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
-            </span>
-          </Link>
-
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -191,10 +208,14 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* TIER 3: Category Navigation Bar (Industrial Orange Background) */}
-      <div className="bg-[#F97316] text-white">
+      {/* TIER 3: Category Navigation Bar — hides on scroll down, shows on scroll up */}
+      <div
+        className={`bg-[#F97316] text-white transition-all duration-300 overflow-hidden ${
+          catBarVisible ? 'max-h-16 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+        }`}
+      >
         <div className="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop">
-          <nav className="hidden lg:flex items-center justify-between overflow-x-auto py-2.5">
+          <nav className="hidden lg:flex items-center justify-between overflow-x-auto px-60 py-2.5">
             {categories.map((cat) => (
               <Link
                 key={cat.name}
