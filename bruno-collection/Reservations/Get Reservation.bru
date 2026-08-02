@@ -1,0 +1,19 @@
+meta {
+  name: Get Reservation
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/reservations/b11c97eb-30bb-4bf5-9fbf-bc4cb0b2fbe0
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+vars:pre-request {
+  base_url: http://localhost:3000
+}

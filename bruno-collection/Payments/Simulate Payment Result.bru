@@ -1,0 +1,25 @@
+meta {
+  name: Simulate Payment Result
+  type: http
+  seq: 2
+}
+
+patch {
+  url: http://localhost:3000/v1/payments/:id/simulate
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: 9fc559c3-9b95-4d9e-a47a-7524c3c53393
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "outcome": "PAID"
+  }
+}

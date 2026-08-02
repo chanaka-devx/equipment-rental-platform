@@ -1,0 +1,19 @@
+meta {
+  name: Refund Payment
+  type: http
+  seq: 3
+}
+
+patch {
+  url: http://localhost:3000/v1/payments/:id/refund
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: YOUR_PAYMENT_ID
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
