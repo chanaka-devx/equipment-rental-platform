@@ -20,7 +20,10 @@ export class ReservationsService {
   async findByUser(userId: string) {
     return this.prisma.reservation.findMany({
       where: { userId },
-      include: { items: { include: { equipment: true } } },
+      include: { 
+        items: { include: { equipment: true } },
+        payment: true,
+      },
     });
   }
 
@@ -178,6 +181,7 @@ export class ReservationsService {
       include: {
         user: { select: { id: true, name: true, email: true } },
         items: { include: { equipment: true } },
+        payment: true,
       },
       orderBy: { createdAt: 'desc' },
     });

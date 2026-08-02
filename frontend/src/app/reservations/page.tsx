@@ -32,6 +32,7 @@ interface Reservation {
   equipment?: { name?: string; images?: string[] };
   equipmentName?: string;
   items?: ReservationItem[];
+  payment?: { status?: string; amount?: number; id?: string };
   status: string;
   totalPrice?: number | string;
   totalAmount?: number | string;
@@ -76,7 +77,7 @@ function ReservationDetailModal({
   const orderId = reservation.orderNumber || reservation.id;
   const customerName = reservation.fullName || reservation.user?.name || reservation.user?.email || 'N/A';
   const customerEmail = reservation.user?.email || 'N/A';
-  const price = reservation.totalPrice ?? reservation.totalAmount ?? '0.00';
+  const price = reservation.payment?.amount ?? reservation.items?.reduce((acc, item) => acc + (Number(item.unitPrice || item.equipment?.rentalPrice || 0) * (item.quantity || 1)), 0) ?? 0;
   const createdDate = reservation.createdAt
     ? new Date(reservation.createdAt).toLocaleString('en-US', {
         dateStyle: 'medium',
@@ -650,8 +651,9 @@ export default function ReservationsPage() {
                       {[
                         { label: 'Order ID',        field: 'id' },
                         { label: 'Full Name',        field: 'fullName' },
-                        { label: 'Total Price',      field: 'totalPrice' },
                         { label: 'Status',           field: 'status' },
+                        { label: 'Payment',          field: 'payment' },
+                        { label: 'Items',            field: 'items' },
                         { label: 'Creation Date',   field: 'createdAt' },
                       ].map(({ label, field }) => (
                         <th
@@ -675,7 +677,7 @@ export default function ReservationsPage() {
                   <tbody className="divide-y divide-slate-50">
                     {loading ? (
                       <tr>
-                        <td colSpan={7} className="py-16 text-center">
+                        <td colSpan={9} className="py-16 text-center">
                           <div className="flex flex-col items-center gap-3 text-slate-400">
                             <span className="material-symbols-outlined animate-spin text-3xl text-[#F97316]">progress_activity</span>
                             <span className="text-sm">Loading reservations…</span>
@@ -684,7 +686,7 @@ export default function ReservationsPage() {
                       </tr>
                     ) : displayRows.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="py-16 text-center">
+                        <td colSpan={9} className="py-16 text-center">
                           <div className="flex flex-col items-center gap-3 text-slate-400">
                             <span className="material-symbols-outlined text-4xl">inbox</span>
                             <span className="text-sm font-medium">No reservations found</span>
@@ -705,6 +707,10 @@ export default function ReservationsPage() {
                               month: '2-digit', year: 'numeric',
                             })
                           : '—';
+                          
+                        const paymentStatus = r.payment?.status || 'PENDING';
+                        const itemCount = r.items?.length || 0;
+                        const firstItemName = r.items?.[0]?.equipment?.name || r.equipment?.name || r.equipmentName;
 
                         return (
                           <tr
@@ -721,11 +727,20 @@ export default function ReservationsPage() {
                             <td className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">
                               {name}
                             </td>
-                            <td className="px-4 py-3 text-sm font-semibold text-[#0F172A] whitespace-nowrap">
-                              {typeof price === 'number' ? `$${Number(price).toFixed(2)}` : price}
-                            </td>
                             <td className="px-4 py-3 whitespace-nowrap">
                               <StatusBadge status={r.status} />
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <span className={`px-2 py-1 text-[10px] font-bold rounded-full border ${
+                                paymentStatus === 'PAID' ? 'text-green-700 bg-green-50 border-green-200' :
+                                paymentStatus === 'FAILED' ? 'text-red-700 bg-red-50 border-red-200' :
+                                'text-slate-600 bg-slate-100 border-slate-200'
+                              }`}>
+                                {paymentStatus}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap max-w-[150px] truncate">
+                              {itemCount > 0 ? `${itemCount} item(s)${firstItemName ? ` (${firstItemName}${itemCount > 1 ? '...' : ''})` : ''}` : 'No items'}
                             </td>
                             <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
                               {created}

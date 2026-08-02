@@ -32,6 +32,7 @@ interface Reservation {
   equipment?: { name?: string; images?: string[] };
   equipmentName?: string;
   items?: ReservationItem[];
+  payment?: { status?: string; amount?: number; id?: string };
   status: string;
   totalPrice?: number | string;
   totalAmount?: number | string;
@@ -388,7 +389,7 @@ function InventoryDetailModal({
   const orderId     = reservation.orderNumber || reservation.id;
   const customerName  = reservation.fullName || reservation.user?.name || reservation.user?.email || 'N/A';
   const customerEmail = reservation.user?.email || 'N/A';
-  const price       = reservation.totalPrice ?? reservation.totalAmount ?? '0.00';
+  const price       = reservation.payment?.amount ?? reservation.items?.reduce((acc, item) => acc + (Number(item.unitPrice || item.equipment?.rentalPrice || 0) * (item.quantity || 1)), 0) ?? 0;
   const createdDate = reservation.createdAt
     ? new Date(reservation.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
     : 'N/A';
@@ -910,7 +911,7 @@ export default function InventoryPage() {
                       paginated.map((r, idx) => {
                         const name    = r.fullName || r.user?.name || r.user?.email || 'N/A';
                         const orderId = r.orderNumber || r.id || '—';
-                        const price   = r.totalPrice ?? r.totalAmount ?? '—';
+                        const price   = r.payment?.amount ?? r.items?.reduce((acc, item) => acc + (Number(item.unitPrice || item.equipment?.rentalPrice || 0) * (item.quantity || 1)), 0) ?? 0;
                         const created = r.createdAt
                           ? new Date(r.createdAt).toLocaleString('en-US', {
                               hour: '2-digit', minute: '2-digit',

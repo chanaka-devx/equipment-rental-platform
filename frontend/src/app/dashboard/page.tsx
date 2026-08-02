@@ -175,8 +175,20 @@ export default function DashboardPage() {
     available: 0,
     rented: 0,
     maintenance: 0,
+    lowStock: 0,
+  });
+  const [resStats, setResStats] = useState({
+    total: 0,
+    active: 0,
+    completed: 0,
+    cancelled: 0,
+    totalRevenue: 0,
+    todayReservations: 0,
+    todayRevenue: 0,
   });
   const [recentReservations, setRecentReservations] = useState<any[]>([]);
+  const [popularItems, setPopularItems] = useState<any[]>([]);
+  const [revenueData, setRevenueData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchStats = useCallback(async () => {
@@ -184,7 +196,7 @@ export default function DashboardPage() {
     try {
       const [eqRes, resRes] = await Promise.all([
         api.get('/equipment?limit=200').catch(() => ({ data: null })),
-        api.get('/reservations?limit=5').catch(() => ({ data: null })),
+        api.get('/reservations?limit=1000').catch(() => ({ data: null })),
       ]);
 
       const items: any[] = eqRes.data?.items || (Array.isArray(eqRes.data) ? eqRes.data : []);
@@ -194,16 +206,80 @@ export default function DashboardPage() {
       const rented = items.filter(
         (i) => (i.available ?? (i.stockQuantity > 0)) === false
       ).length;
+      const lowStock = items.filter(
+        (i) => (i.stockQuantity !== undefined ? i.stockQuantity <= 2 : false)
+      ).length;
 
       setStats({
         totalEquipment: items.length,
         available,
         rented,
         maintenance: 0,
+        lowStock,
       });
 
       const reservations: any[] = resRes.data?.items || (Array.isArray(resRes.data) ? resRes.data : []);
+      
+      let active = 0, completed = 0, cancelled = 0;
+      let totalRev = 0;
+      let todayRes = 0;
+      let todayRev = 0;
+      const todayStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+      reservations.forEach(r => {
+        if (r.status === 'PENDING' || r.status === 'APPROVED' || r.status === 'ACTIVE') active++;
+        else if (r.status === 'COMPLETED') completed++;
+        else cancelled++;
+
+        const dateStr = new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        if (dateStr === todayStr) {
+          todayRes++;
+        }
+      });
+
       setRecentReservations(reservations.slice(0, 5));
+
+      const revMap = new Map();
+      reservations.forEach(r => {
+        if (r.status !== 'CANCELLED' && r.status !== 'REJECTED') {
+          const date = new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const amount = r.payment?.amount ?? r.items?.reduce((acc: number, item: any) => acc + (Number(item.unitPrice || item.equipment?.rentalPrice || 0) * (item.quantity || 1)), 0) ?? 0;
+          revMap.set(date, (revMap.get(date) || 0) + Number(amount));
+          totalRev += Number(amount);
+          
+          if (date === todayStr) {
+            todayRev += Number(amount);
+          }
+        }
+      });
+      setResStats({ total: reservations.length, active, completed, cancelled, totalRevenue: totalRev, todayReservations: todayRes, todayRevenue: todayRev });
+
+      const revArray = Array.from(revMap.entries()).map(([label, value]) => ({ label, value })).slice(-7);
+      setRevenueData(revArray.length ? revArray : [
+        { label: 'Nov 6', value: 2200 },
+        { label: 'Nov 11', value: 3400 },
+      ]);
+
+      const popMap = new Map();
+      reservations.forEach(r => {
+        if (r.items) {
+          r.items.forEach((i: any) => {
+            const eqId = i.equipmentId;
+            if (!popMap.has(eqId)) {
+              popMap.set(eqId, { 
+                name: i.equipment?.name || 'Unknown', 
+                price: `$${i.unitPrice || i.equipment?.rentalPrice || 0}/day`, 
+                bookings: 0,
+                img: i.equipment?.imageUrl || 'https://pub-ec99c8a8fe684a6a931dd2f902e53e4b.r2.dev/Application%20images/tools%20(1).png'
+              });
+            }
+            popMap.get(eqId).bookings += 1;
+          });
+        }
+      });
+      const popArray = Array.from(popMap.values()).sort((a, b) => b.bookings - a.bookings).slice(0, 3);
+      setPopularItems(popArray);
+
     } catch {
       // Use mock data if API fails
     } finally {
@@ -221,16 +297,6 @@ export default function DashboardPage() {
     month: 'long',
     day: 'numeric',
   });
-
-  const revenueData = [
-    { label: 'Nov 6', value: 2200 },
-    { label: 'Nov 11', value: 3400 },
-    { label: 'Nov 16', value: 2900 },
-    { label: 'Nov 21', value: 4200 },
-    { label: 'Nov 26', value: 3700 },
-    { label: 'Dec 1', value: 4600 },
-    { label: 'Dec 6', value: 3500 },
-  ];
 
   const schedule = [
     { time: '09:00 AM', duration: '30 min', type: 'Equipment Pickup', item: 'Canon EOS R5 – Outdoor Shoot', color: 'bg-green-500' },
@@ -330,27 +396,27 @@ export default function DashboardPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <StatCard
                   label="Today's Reservations"
-                  value={18}
+                  value={resStats.todayReservations.toString().padStart(2, '0')}
                   href="/reservations"
-                  trend="▲ 12% vs yesterday"
+                  trend="View active requests"
                 />
                 <StatCard
                   label="Active Reservations"
-                  value={42}
+                  value={resStats.active.toString().padStart(2, '0')}
                   href="/reservations"
-                  trend="▲ 5% this week"
+                  trend="Awaiting completion"
                 />
                 <StatCard
                   label="Today's Revenue"
-                  value="$3,450"
+                  value={`$${resStats.todayRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   href="/reservations"
-                  trend="▲ 8% vs yesterday"
+                  trend="Syncs with payments"
                 />
                 <StatCard
                   label="Low Stock Items"
-                  value="08"
+                  value={stats.lowStock.toString().padStart(2, '0')}
                   href="/inventory"
-                  trend="▼ 2 resolved today"
+                  trend="Requires attention"
                 />
               </div>
 
@@ -389,7 +455,7 @@ export default function DashboardPage() {
                   {/* Summary */}
                   <div className="sm:w-[140px] shrink-0 border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0 sm:pl-5 flex flex-col justify-between">
                     <div>
-                      <p className="text-2xl font-extrabold text-[#0F172A]">$124,345</p>
+                      <p className="text-2xl font-extrabold text-[#0F172A]">${(resStats.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                       <p className="text-xs text-slate-400 mb-4">Total Revenue</p>
                       <div className="space-y-3">
                         <div className="flex items-center gap-2">
@@ -397,7 +463,7 @@ export default function DashboardPage() {
                             <span className="material-symbols-outlined text-xs text-green-600">payments</span>
                           </div>
                           <div>
-                            <p className="text-xs font-extrabold text-[#0F172A]">$98,765</p>
+                            <p className="text-xs font-extrabold text-[#0F172A]">${((resStats.totalRevenue || 0) * 0.9).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                             <p className="text-[10px] text-slate-400">Total Income</p>
                           </div>
                         </div>
@@ -433,91 +499,56 @@ export default function DashboardPage() {
                   </Link>
                 </div>
 
-                {recentReservations.length === 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-slate-50 text-left">
-                          {['ID', 'Customer', 'Equipment', 'Date', 'Status', 'Amount'].map((h) => (
-                            <th key={h} className={`px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest ${h === 'Equipment' ? 'hidden sm:table-cell' : ''} ${h === 'Date' ? 'hidden md:table-cell' : ''}`}>
-                              {h}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {[
-                          { id: '#RES-1256', customer: 'John Doe', equipment: 'Canon EOS R5', date: 'Dec 6, 2021', time: '09:00 AM', status: 'Active', amount: '$120.00' },
-                          { id: '#RES-1255', customer: 'Jane Smith', equipment: 'DJI Mavic 3 Pro', date: 'Dec 6, 2021', time: '11:30 AM', status: 'Completed', amount: '$85.00' },
-                          { id: '#RES-1254', customer: 'Bob Wilson', equipment: 'Bosch Drill Set', date: 'Dec 5, 2021', time: '02:00 PM', status: 'Pending', amount: '$45.00' },
-                          { id: '#RES-1253', customer: 'Alice Chen', equipment: 'Event Lights Kit', date: 'Dec 5, 2021', time: '04:00 PM', status: 'Active', amount: '$180.00' },
-                          { id: '#RES-1252', customer: 'Mike Ross', equipment: 'Construction Mixer', date: 'Dec 4, 2021', time: '10:00 AM', status: 'Completed', amount: '$95.00' },
-                        ].map((r) => (
-                          <tr key={r.id} className="hover:bg-slate-50 transition-colors group">
-                            <td className="px-5 py-3.5 font-extrabold text-[#0F172A] text-xs">{r.id}</td>
-                            <td className="px-5 py-3.5 text-slate-700 text-sm font-medium">{r.customer}</td>
-                            <td className="px-5 py-3.5 text-slate-600 text-sm hidden sm:table-cell">{r.equipment}</td>
-                            <td className="px-5 py-3.5 text-slate-500 text-xs hidden md:table-cell whitespace-nowrap">
-                              {r.date}<br /><span className="text-slate-400">{r.time}</span>
-                            </td>
-                            <td className="px-5 py-3.5">
-                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${
-                                r.status === 'Active'
-                                  ? 'bg-green-50 text-green-700 border-green-200'
-                                  : r.status === 'Completed'
-                                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                  : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                              }`}>
-                                {r.status}
-                              </span>
-                            </td>
-                            <td className="px-5 py-3.5 font-extrabold text-[#0F172A] text-sm">{r.amount}</td>
-                          </tr>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 text-left">
+                        {['ID', 'Customer', 'Equipment', 'Date', 'Status', 'Amount'].map((h) => (
+                          <th key={h} className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            {h}
+                          </th>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-slate-50 text-left">
-                          {['ID', 'Customer', 'Equipment', 'Date', 'Status', 'Amount'].map((h) => (
-                            <th key={h} className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                              {h}
-                            </th>
-                          ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {recentReservations.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-5 py-8 text-center text-slate-500">
+                            No recent reservations found.
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {recentReservations.map((r: any) => (
-                          <tr key={r.id} className="hover:bg-slate-50 transition-colors">
-                            <td className="px-5 py-3.5 font-extrabold text-[#0F172A] text-xs">#{r.id?.slice(-6) || '------'}</td>
-                            <td className="px-5 py-3.5 text-slate-700 text-sm">{r.user?.name || r.userName || 'N/A'}</td>
-                            <td className="px-5 py-3.5 text-slate-600 text-sm">{r.equipment?.name || r.equipmentName || 'N/A'}</td>
-                            <td className="px-5 py-3.5 text-slate-500 text-xs whitespace-nowrap">
-                              {r.startDate ? new Date(r.startDate).toLocaleDateString() : 'N/A'}
-                            </td>
-                            <td className="px-5 py-3.5">
-                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${
-                                r.status === 'ACTIVE' || r.status === 'Active'
-                                  ? 'bg-green-50 text-green-700 border-green-200'
-                                  : r.status === 'COMPLETED' || r.status === 'Completed'
-                                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                  : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                              }`}>
-                                {r.status}
-                              </span>
-                            </td>
-                            <td className="px-5 py-3.5 font-extrabold text-[#0F172A]">
-                              ${r.totalPrice || r.totalAmount || '0.00'}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                      ) : (
+                        recentReservations.map((r: any) => {
+                          const price = r.payment?.amount ?? r.items?.reduce((acc: number, item: any) => acc + (Number(item.unitPrice || item.equipment?.rentalPrice || 0) * (item.quantity || 1)), 0) ?? 0;
+                          return (
+                            <tr key={r.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-5 py-3.5 font-extrabold text-[#0F172A] text-xs">#{r.id?.slice(-6) || '------'}</td>
+                              <td className="px-5 py-3.5 text-slate-700 text-sm">{r.user?.name || r.userName || 'N/A'}</td>
+                              <td className="px-5 py-3.5 text-slate-600 text-sm">{r.items?.[0]?.equipment?.name || r.equipment?.name || r.equipmentName || 'N/A'}{r.items?.length > 1 ? ` (+${r.items.length - 1})` : ''}</td>
+                              <td className="px-5 py-3.5 text-slate-500 text-xs whitespace-nowrap">
+                                {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'N/A'}
+                              </td>
+                              <td className="px-5 py-3.5">
+                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${
+                                  r.status === 'ACTIVE' || r.status === 'Active' || r.status === 'PENDING' || r.status === 'APPROVED'
+                                    ? 'bg-green-50 text-green-700 border-green-200'
+                                    : r.status === 'COMPLETED' || r.status === 'Completed'
+                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                    : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                }`}>
+                                  {r.status}
+                                </span>
+                              </td>
+                              <td className="px-5 py-3.5 font-extrabold text-[#0F172A]">
+                                {typeof price === 'number' ? `$${price.toFixed(2)}` : price}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* Equipment Category Cards — mobile & tablet only (xl hides the right panel) */}
@@ -574,23 +605,23 @@ export default function DashboardPage() {
                   <h3 className="font-extrabold text-[#0F172A]">Reservations</h3>
                   <Link href="/reservations" className="text-[10px] text-[#F97316] font-bold hover:underline">View All</Link>
                 </div>
-                <p className="text-[10px] text-slate-400 mb-4">from 42 total reservations</p>
+                <p className="text-[10px] text-slate-400 mb-4">from {resStats.total} total reservations</p>
                 <div className="flex items-center gap-4">
                   <DonutChart
                     size={80}
-                    centerText="24"
+                    centerText={resStats.active.toString()}
                     centerSubtext="Active"
                     segments={[
-                      { value: 24, color: '#3B82F6' },
-                      { value: 10, color: '#F97316' },
-                      { value: 8, color: '#EF4444' },
+                      { value: resStats.active, color: '#3B82F6' },
+                      { value: resStats.completed, color: '#F97316' },
+                      { value: resStats.cancelled, color: '#EF4444' },
                     ]}
                   />
                   <div className="space-y-2">
                     {[
-                      { label: 'Active', value: 24, color: 'bg-blue-500' },
-                      { label: 'Completed', value: 10, color: 'bg-[#F97316]' },
-                      { label: 'Cancelled', value: 8, color: 'bg-red-500' },
+                      { label: 'Active', value: resStats.active, color: 'bg-blue-500' },
+                      { label: 'Completed', value: resStats.completed, color: 'bg-[#F97316]' },
+                      { label: 'Cancelled', value: resStats.cancelled, color: 'bg-red-500' },
                     ].map((s) => (
                       <div key={s.label} className="flex items-center gap-2 text-xs">
                         <div className={`w-2 h-2 rounded-full shrink-0 ${s.color}`} />
@@ -644,44 +675,29 @@ export default function DashboardPage() {
                   <Link href="/equipment" className="text-[10px] text-[#F97316] font-bold hover:underline">View All</Link>
                 </div>
                 <div className="space-y-3">
-                  {[
-                    {
-                      name: 'Canon EOS R5',
-                      price: '$80/day',
-                      bookings: 32,
-                      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCpVbsLJAKj0Orozg-hpwXs2nssDP7P_sGvDA6Vw1D0h82W1NZEXskYiN6NJn7fPbpztJqs3bWI4NwXSFUG9E49BFCpptxlWP5-UK6nEedlLi8u5muwYEdexr5QPKwPomws60BX75aAwSO8WRJTvqwZWMEWL7B2Wnef_M8bMcysvVLa4il-eZ9vtoiyeblIt9OIvGHeWyL_SZQBvMljvzUjPPIZiq1-2bfNFj6QoPKKyeJsqPRD8_fO',
-                    },
-                    {
-                      name: 'DJI Mavic 3 Pro',
-                      price: '$85/day',
-                      bookings: 28,
-                      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAI9ctd0UMecGwc44M-iIiB9HbnuaY2zy8ByWmhCN5k4bVzzOnTDmuTnGGYB3VG30aT1sr1xDRx0TwOCSqxw0IPMu6om49t1owMgVMR5cO0OIz0xK5z3xn03md6wi-rVRIq6zsfGOr0JjpRfhwbp5GZtohiZVMmo0oemEbWiH1VMsaqtHYi6CvRp0etbNdNKZC1cnc6ZEQB4kSMz2ceFpryBQCT3R0kTM4nz8mcVTYMxZRPW3Mo1bst',
-                    },
-                    {
-                      name: 'Bosch Drill Set',
-                      price: '$45/day',
-                      bookings: 21,
-                      img: 'https://pub-ec99c8a8fe684a6a931dd2f902e53e4b.r2.dev/Application%20images/tools%20(1).png',
-                    },
-                  ].map((item) => (
-                    <div key={item.name} className="flex items-center gap-3 group">
-                      <div className="w-12 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
-                        <img
-                          src={item.img}
-                          alt={item.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
+                  {popularItems.length === 0 ? (
+                    <div className="text-center py-4 text-xs text-slate-500">No data available</div>
+                  ) : (
+                    popularItems.map((item) => (
+                      <div key={item.name} className="flex items-center gap-3 group">
+                        <div className="w-12 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                          <img
+                            src={item.img}
+                            alt={item.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-[#0F172A] truncate">{item.name}</p>
+                          <p className="text-[10px] text-slate-400">{item.price}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-extrabold text-[#0F172A]">{item.bookings}</p>
+                          <p className="text-[10px] text-slate-400">bookings</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-[#0F172A] truncate">{item.name}</p>
-                        <p className="text-[10px] text-slate-400">{item.price}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-extrabold text-[#0F172A]">{item.bookings}</p>
-                        <p className="text-[10px] text-slate-400">bookings</p>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </div>
