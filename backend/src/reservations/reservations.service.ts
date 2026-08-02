@@ -106,8 +106,14 @@ export class ReservationsService {
     return this.updateStatus(id, 'CANCELLED');
   }
 
-  findAll(id: string) {
-    return `This action returns all reservations`;
+  async findAll() {
+    return this.prisma.reservation.findMany({
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        items: { include: { equipment: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   findOne(id: string) {
