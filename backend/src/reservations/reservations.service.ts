@@ -81,21 +81,88 @@ export class ReservationsService {
       ACTIVE: ['RETURNED'],
     };
 
+    // Validate BEFORE writing to DB
+    if (!validTransitions[reservation.status]?.includes(newStatus)) {
+      throw new BadRequestException(`Cannot transition from ${reservation.status} to ${newStatus}`);
+    }
+
     const updated = await this.reservationsRepository.updateStatus(id, newStatus);
 
     if (newStatus === 'APPROVED') {
       await this.notificationsService.queueNotification(updated.userId, 'Your reservation has been approved!');
     } else if (newStatus === 'REJECTED') {
       await this.notificationsService.queueNotification(updated.userId, 'Your reservation was rejected.');
+    } else if (newStatus === 'ACTIVE') {
+      await this.notificationsService.queueNotification(updated.userId, 'Your equipment has been released! Enjoy your rental.');
     } else if (newStatus === 'RETURNED') {
       await this.notificationsService.queueNotification(updated.userId, 'Your equipment has been returned successfully. Thank you!');
     }
 
-    if (!validTransitions[reservation.status]?.includes(newStatus)) {
-      throw new BadRequestException(`Cannot transition from ${reservation.status} to ${newStatus}`);
+    return updated;
+  }
+
+  /** Operator releases equipment: APPROVED → ACTIVE */
+  async releaseReservation(id: string) {
+    return this.updateStatus(id, 'ACTIVE');
+  }
+
+  async returnItems(id: string, returns: { equipmentId: string; qtyGood: number; qtyDamaged: number; note?: string }[], userId: string) {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id },
+      include: { items: true }
+    });
+    if (!reservation) throw new NotFoundException();
+    if (reservation.status !== 'ACTIVE') throw new BadRequestException('Reservation must be ACTIVE to return items');
+
+    for (const ret of returns) {
+      const item = reservation.items.find(i => i.equipmentId === ret.equipmentId);
+      if (!item) continue;
+      
+      const availableToReturn = item.quantity - item.returnedQuantity - item.damagedQuantity;
+      if (ret.qtyGood + ret.qtyDamaged > availableToReturn) {
+        throw new BadRequestException(`Cannot return more than rented for equipment ${ret.equipmentId}`);
+      }
+
+      if (ret.qtyDamaged > 0) {
+        await this.prisma.reservationItem.update({
+          where: { id: item.id },
+          data: { damagedQuantity: { increment: ret.qtyDamaged } }
+        });
+        await this.prisma.equipment.update({
+          where: { id: ret.equipmentId },
+          data: { stockQuantity: { decrement: ret.qtyDamaged } }
+        });
+        await this.prisma.activityLog.create({
+          data: {
+            userId,
+            action: 'DAMAGE_RECORDED',
+            details: { equipmentId: ret.equipmentId, note: ret.note, quantity: ret.qtyDamaged, reservationId: id } as any
+          }
+        });
+      }
+
+      if (ret.qtyGood > 0) {
+        await this.prisma.reservationItem.update({
+          where: { id: item.id },
+          data: { returnedQuantity: { increment: ret.qtyGood } }
+        });
+      }
     }
 
-    return this.prisma.reservation.update({ where: { id }, data: { status: newStatus } });
+    const updatedReservation = await this.prisma.reservation.findUnique({
+      where: { id },
+      include: { items: true }
+    });
+    
+    if (!updatedReservation) throw new NotFoundException();
+
+    const allReturned = updatedReservation.items.every(i => (i.returnedQuantity + i.damagedQuantity) === i.quantity);
+
+    if (allReturned) {
+      return this.updateStatus(id, 'RETURNED');
+    }
+
+    return updatedReservation;
   }
 
   async cancel(id: string, userId: string) {
