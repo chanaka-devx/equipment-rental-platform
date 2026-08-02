@@ -3,7 +3,24 @@
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import NextImage from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
+import api from '@/lib/api';
+import { useCart } from '@/context/CartContext';
+
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface Equipment {
+  id: string;
+  name: string;
+  description?: string;
+  rentalPrice?: number;
+  categoryId?: string;
+  images?: string[];
+}
 
 const heroImages = [
   'https://pub-ec99c8a8fe684a6a931dd2f902e53e4b.r2.dev/Application%20images/drone%20(1).png',
@@ -14,7 +31,23 @@ const heroImages = [
 ];
 
 export default function LandingPage() {
+  const { addToCart } = useCart();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
+
+  useEffect(() => {
+    api.get('/categories')
+       .then(res => setCategories(res.data || []))
+       .catch(console.error);
+    
+    api.get('/equipment?limit=200')
+       .then(res => {
+         const items = res.data?.items || (Array.isArray(res.data) ? res.data : []);
+         setEquipment(items);
+       })
+       .catch(console.error);
+  }, []);
 
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % heroImages.length);
@@ -102,36 +135,76 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Search / Filter Bar */}
-        <section className="w-full px-6 md:px-16 max-w-[1200px] mx-auto -mt-8 relative z-20 pb-16">
-          <div className="bg-white border border-slate-200 rounded-lg shadow-md p-4 md:p-5 flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex-grow w-full relative">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" style={{ fontSize: '20px' }}>
-                search
-              </span>
-              <input
-                className="w-full pl-10 pr-4 py-2.5 bg-white text-[#1E293B] border border-gray-300 rounded focus:border-[#F97316] focus:ring-1 focus:ring-[#F97316] transition-all outline-none text-sm"
-                placeholder="Search equipment by name, category, or brand..."
-                type="text"
-              />
-            </div>
-            <div className="flex gap-3 w-full md:w-auto">
-              <select className="w-full md:w-44 px-3 py-2.5 bg-white text-[#1E293B] border border-gray-300 rounded focus:border-[#F97316] outline-none text-sm appearance-none">
-                <option>Any Category</option>
-                <option>Earthmoving</option>
-                <option>Material Handling</option>
-              </select>
-              <select className="w-full md:w-44 px-3 py-2.5 bg-white text-[#1E293B] border border-gray-300 rounded focus:border-[#F97316] outline-none text-sm appearance-none">
-                <option>Any Location</option>
-                <option>Texas Hub</option>
-                <option>Ohio Hub</option>
-              </select>
-            </div>
-            <button className="w-full md:w-auto bg-[#0F172A] text-white px-6 py-2.5 rounded text-sm font-semibold hover:bg-slate-700 transition-colors whitespace-nowrap">
-              Find Now
-            </button>
-          </div>
+        {/* Equipment Categories */}
+        <section className="w-full px-6 md:px-16 max-w-[1200px] mx-auto py-16 space-y-16">
+          {categories.map(category => {
+            const catItems = equipment.filter(e => e.categoryId === category.id).slice(0, 4);
+            if (catItems.length === 0) return null; // Don't show empty categories
+            return (
+              <div key={category.id} className="w-full">
+                {/* Category Header */}
+                <div className="flex items-center gap-4 mb-8">
+                  <h2 className="text-2xl font-bold text-[#0F172A] whitespace-nowrap">{category.name}</h2>
+                  <div className="h-px bg-slate-200 flex-1"></div>
+                </div>
+
+                {/* Equipment Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                  {catItems.map(item => (
+                    <div key={item.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+                      <div className="aspect-square bg-slate-100 relative">
+                        {item.images?.[0] ? (
+                          <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex items-center justify-center w-full h-full text-slate-400">
+                            <span className="material-symbols-outlined text-4xl">
+                              <NextImage
+                                src="/logo2.svg"
+                                alt="RentForge Logo"
+                                width={48}
+                                height={48}
+                                className="h-10 w-auto"
+                                priority
+                              />
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4 flex flex-col flex-1">
+                        <h3 className="font-bold text-[#0F172A] mb-1 line-clamp-1">{item.name}</h3>
+                        <p className="text-sm text-slate-500 line-clamp-2 mb-4 flex-1">{item.description || 'No description available.'}</p>
+                        <div className="flex items-center justify-between mt-auto">
+                          <p className="font-bold text-[#F97316]">${item.rentalPrice || 0}/day</p>
+                          <button
+                            onClick={() => addToCart({
+                              id: item.id,
+                              name: item.name,
+                              description: item.description,
+                              rentalPrice: item.rentalPrice,
+                              images: item.images,
+                            })}
+                            className="text-xs font-bold text-slate-700 hover:text-[#F97316] transition-colors focus:outline-none flex items-center gap-1"
+                          >
+                            <span className="material-symbols-outlined text-sm">add_shopping_cart</span>
+                            Rent
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* View All Link */}
+                <div className="mt-8 text-center">
+                  <Link href={`/category?name=${encodeURIComponent(category.name)}`} className="inline-block text-sm font-bold text-[#0F172A] border-b border-transparent hover:border-[#0F172A] transition-colors">
+                    View All
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
         </section>
+        
       </main>
 
       <Footer />
