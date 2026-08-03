@@ -18,7 +18,13 @@ export class PaymentsService {
   }
 
   async simulatePaymentResult(paymentId: string, outcome: 'PAID' | 'FAILED') {
-    return this.paymentsRepository.updateStatus(paymentId, outcome);
+    const payment = await this.paymentsRepository.updateStatus(paymentId, outcome);
+    
+    if (outcome === 'PAID') {
+      await this.reservationsRepository.updateStatus(payment.reservationId, 'APPROVED');
+    }
+    
+    return payment;
   }
 
   async refund(paymentId: string) {

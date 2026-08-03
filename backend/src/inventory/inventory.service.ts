@@ -19,14 +19,14 @@ export class InventoryService {
     await this.logAction(userId, 'INVENTORY_RELEASED', { equipmentId, quantity });
   }
 
-  async recordDamage(equipmentId: string, note: string, userId: string) {
-    await this.inventoryRepository.setAvailability(equipmentId, false); // ties back to Day 3's "available" decision
-    await this.logAction(userId, 'DAMAGE_RECORDED', { equipmentId, note });
+  async recordDamage(equipmentId: string, note: string, userId: string, quantity: number = 1) {
+    await this.inventoryRepository.adjustStock(equipmentId, -quantity); 
+    await this.logAction(userId, 'DAMAGE_RECORDED', { equipmentId, note, quantity });
   }
 
-  async recordMaintenance(equipmentId: string, note: string, userId: string) {
-    await this.inventoryRepository.setAvailability(equipmentId, true); // back in service
-    await this.logAction(userId, 'MAINTENANCE_COMPLETED', { equipmentId, note });
+  async recordMaintenance(equipmentId: string, note: string, userId: string, quantity: number = 1) {
+    await this.inventoryRepository.adjustStock(equipmentId, quantity); 
+    await this.logAction(userId, 'MAINTENANCE_COMPLETED', { equipmentId, note, quantity });
   }
 
   private async logAction(userId: string, action: string, details: any) {

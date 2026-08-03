@@ -42,7 +42,9 @@ export default function RegisterPage() {
 
       const { access_token, refresh_token, user: userData } = loginRes.data;
       login(userData || { name: data.name, email: data.email, role: 'USER' }, { access_token, refresh_token });
-      router.push('/dashboard');
+      const staffRoles = ['ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR'];
+      const destination = staffRoles.includes(userData?.role) ? '/dashboard' : '/';
+      router.push(destination);
     } catch (error: any) {
       console.error('Registration failed', error);
       const msg = error.response?.data?.message;
@@ -57,14 +59,13 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
-      <Navbar />
       <main className="flex-grow flex items-center justify-center relative overflow-hidden py-12 px-margin-mobile md:px-margin-desktop">
         {/* Background Industrial Hero Canvas */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat w-full h-full"
           style={{
             backgroundImage:
-              "url('https://lh3.googleusercontent.com/aida-public/AB6AXuACW-cHlcV4OCHkdgUar1cVi0_M7SQFIFpRiYCPTpdSUjUKbbcxMweo0zPMW6FGpy5k2ax5BOjmWGt0v5UFdh2vqUxwsgbs6JlCurOjrDvN_qiTFxlGwMp8zGK5fjlNM7NZ8W67Nmb0V4NE2DCXviACZLCkRrCsTlEkEuE969AjvMjbE2xsjpg_nUo7dGPAPlvNarbhEDgG2kjhtyCEx2j0yuy5ljFUFEkgQA2UM9uVTRZQZUGxDwcq')"
+              "url('https://pub-ec99c8a8fe684a6a931dd2f902e53e4b.r2.dev/Application%20images/events.png')"
           }}
         ></div>
         <div className="absolute inset-0 bg-[#0F172A] bg-opacity-75 mix-blend-multiply"></div>
@@ -185,7 +186,6 @@ export default function RegisterPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

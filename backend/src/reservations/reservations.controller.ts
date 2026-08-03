@@ -16,6 +16,11 @@ export class ReservationsController {
     return this.reservationsService.create(req.user.userId, createReservationDto);
   }
 
+  @Get()
+  findAll() {
+    return this.reservationsService.findAll();
+  }
+
   @Get('my-reservations')
   findMyReservations(@Req() req) {
     return this.reservationsService.findByUser(req.user.userId);
@@ -39,12 +44,30 @@ export class ReservationsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'STAFF')
+  @Roles('ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR')
   @Patch(':id/status')
   updateStatus(
     @Param('id') id: string,
     @Body('status') status: ReservationStatus,
   ) {
     return this.reservationsService.updateStatus(id, status);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR')
+  @Patch(':id/release')
+  release(@Param('id') id: string) {
+    return this.reservationsService.releaseReservation(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR')
+  @Post(':id/return')
+  returnItems(
+    @Param('id') id: string,
+    @Body('returns') returns: { equipmentId: string; qtyGood: number; qtyDamaged: number; note?: string }[],
+    @Req() req
+  ) {
+    return this.reservationsService.returnItems(id, returns, req.user.userId);
   }
 }
