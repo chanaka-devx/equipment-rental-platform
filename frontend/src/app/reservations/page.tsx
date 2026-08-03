@@ -187,7 +187,7 @@ function ReservationDetailModal({
             <div className="col-span-2 sm:col-span-1">
               <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Total Amount</span>
               <span className="font-extrabold text-[#F97316] text-sm">
-                {typeof price === 'number' ? `$${Number(price).toFixed(2)}` : price}
+                {typeof price === 'number' ? `Rs.${Number(price).toFixed(2)}` : price}
               </span>
             </div>
           </div>
@@ -224,9 +224,9 @@ function ReservationDetailModal({
                         </div>
                       </div>
                       <div className="text-right shrink-0 text-xs">
-                        <p className="font-bold text-[#0F172A]">${unitPrice} × {qty}</p>
+                        <p className="font-bold text-[#0F172A]">Rs.{unitPrice} × {qty}</p>
                         <p className="text-[10px] font-extrabold text-[#F97316]">
-                          ${(Number(unitPrice) * qty).toFixed(2)}
+                          Rs.{(Number(unitPrice) * qty).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -248,7 +248,7 @@ function ReservationDetailModal({
                 </div>
                 <div className="text-right text-xs">
                   <p className="font-extrabold text-[#0F172A]">
-                    {typeof price === 'number' ? `$${Number(price).toFixed(2)}` : price}
+                    {typeof price === 'number' ? `Rs.${Number(price).toFixed(2)}` : price}
                   </p>
                 </div>
               </div>

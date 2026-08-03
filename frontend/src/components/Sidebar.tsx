@@ -101,7 +101,17 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </nav>
 
         {/* Bottom section */}
-        <div className="border-t border-slate-800 pt-4 mt-4">
+        <div className="border-t border-slate-800 pt-4 mt-4 space-y-1">
+          <Link
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all text-sm font-semibold"
+          >
+            <span className="material-symbols-outlined text-xl">open_in_new</span>
+            Visit Website
+          </Link>
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-red-900/30 hover:text-red-400 transition-all text-sm font-semibold"

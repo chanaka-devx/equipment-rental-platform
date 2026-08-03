@@ -42,7 +42,9 @@ export default function RegisterPage() {
 
       const { access_token, refresh_token, user: userData } = loginRes.data;
       login(userData || { name: data.name, email: data.email, role: 'USER' }, { access_token, refresh_token });
-      router.push('/dashboard');
+      const staffRoles = ['ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR'];
+      const destination = staffRoles.includes(userData?.role) ? '/dashboard' : '/';
+      router.push(destination);
     } catch (error: any) {
       console.error('Registration failed', error);
       const msg = error.response?.data?.message;

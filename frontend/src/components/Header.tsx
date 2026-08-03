@@ -1,6 +1,8 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
+import { useRef, useState } from 'react';
+import NotificationsModal from '@/app/customer/NotificationsModal';
 
 interface HeaderProps {
   title: string;
@@ -9,6 +11,9 @@ interface HeaderProps {
 
 export default function Header({ title, onOpenSidebar }: HeaderProps) {
   const { user } = useAuth();
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notifBtnRef = useRef<HTMLDivElement>(null);
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -34,12 +39,27 @@ export default function Header({ title, onOpenSidebar }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        <button className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors" aria-label="Notifications">
-          <span className="material-symbols-outlined text-xl">notifications</span>
-          <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-[#F97316] text-white text-[8px] font-bold rounded-full flex items-center justify-center">
-            3
-          </span>
-        </button>
+
+        {/* Notifications */}
+        <div className="relative" ref={notifBtnRef}>
+          <button
+            onClick={() => setNotificationsOpen((v) => !v)}
+            className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors"
+            aria-label="Notifications"
+          >
+            <span className="material-symbols-outlined text-xl">notifications</span>
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-[#F97316] text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+          <NotificationsModal
+            open={notificationsOpen}
+            onClose={() => setNotificationsOpen(false)}
+            onUnreadCountChange={setUnreadCount}
+          />
+        </div>
 
         <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200 ml-1">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm shrink-0">

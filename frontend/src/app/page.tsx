@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import NextImage from 'next/image';
@@ -32,6 +33,7 @@ const heroImages = [
 
 export default function LandingPage() {
   const { addToCart } = useCart();
+  const router = useRouter();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -151,7 +153,11 @@ export default function LandingPage() {
                 {/* Equipment Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                   {catItems.map(item => (
-                    <div key={item.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+                    <div 
+                      key={item.id} 
+                      onClick={() => router.push(`/equipment/${item.id}`)}
+                      className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer group"
+                    >
                       <div className="aspect-square bg-slate-100 relative">
                         {item.images?.[0] ? (
                           <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
@@ -171,19 +177,22 @@ export default function LandingPage() {
                         )}
                       </div>
                       <div className="p-4 flex flex-col flex-1">
-                        <h3 className="font-bold text-[#0F172A] mb-1 line-clamp-1">{item.name}</h3>
+                        <h3 className="font-bold text-[#0F172A] mb-1 line-clamp-1 group-hover:text-[#F97316] transition-colors">{item.name}</h3>
                         <p className="text-sm text-slate-500 line-clamp-2 mb-4 flex-1">{item.description || 'No description available.'}</p>
                         <div className="flex items-center justify-between mt-auto">
-                          <p className="font-bold text-[#F97316]">${item.rentalPrice || 0}/day</p>
+                          <p className="font-bold text-[#F97316]">Rs.{item.rentalPrice || 0}/day</p>
                           <button
-                            onClick={() => addToCart({
-                              id: item.id,
-                              name: item.name,
-                              description: item.description,
-                              rentalPrice: item.rentalPrice,
-                              images: item.images,
-                            })}
-                            className="text-xs font-bold text-slate-700 hover:text-[#F97316] transition-colors focus:outline-none flex items-center gap-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToCart({
+                                id: item.id,
+                                name: item.name,
+                                description: item.description,
+                                rentalPrice: item.rentalPrice,
+                                images: item.images,
+                              });
+                            }}
+                            className="text-xs font-bold text-slate-700 hover:text-[#F97316] transition-colors focus:outline-none flex items-center gap-1 relative z-10"
                           >
                             <span className="material-symbols-outlined text-sm">add_shopping_cart</span>
                             Rent

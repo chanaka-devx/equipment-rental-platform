@@ -12,4 +12,18 @@ export class NotificationsRepository {
   findByUser(userId: string) {
     return this.prisma.notification.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } });
   }
+
+  markAsRead(id: string, userId: string) {
+    return this.prisma.notification.updateMany({
+      where: { id, userId },
+      data: { isRead: true },
+    });
+  }
+
+  markAllAsRead(userId: string) {
+    return this.prisma.notification.updateMany({
+      where: { userId, isRead: false },
+      data: { isRead: true },
+    });
+  }
 }

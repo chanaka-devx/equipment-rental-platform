@@ -4,75 +4,64 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
+import CartModal from '@/app/customer/CartModal';
+import NotificationsModal from '@/app/customer/NotificationsModal';
+import AccountModal from '@/app/customer/AccountModal';
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
-  const { cart, startDate, endDate, setStartDate, setEndDate, removeFromCart, updateQuantity, clearCart } = useCart();
-  const router = useRouter();
+  const { user } = useAuth();
+  const { cart } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const [catBarVisible, setCatBarVisible] = useState(true);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [submitError, setSubmitError] = useState('');
   const lastScrollY = useRef(0);
-  const cartRef = useRef<HTMLDivElement>(null);
 
-  const getDuration = () => {
-    if (!startDate || !endDate) return 1;
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 1;
-  };
+  // Modal states
+  const [cartOpen, setCartOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const duration = getDuration();
-  const subtotal = cart.reduce((sum, item) => sum + Number(item.equipment.rentalPrice ?? 0) * item.quantity * duration, 0);
-  const totalDeposit = cart.reduce((sum, item) => sum + Number(item.equipment.deposit ?? 0) * item.quantity, 0);
-  const grandTotal = subtotal + totalDeposit;
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  // Refs for trigger buttons (for positioning)
+  const cartBtnRef = useRef<HTMLDivElement>(null);
+  const notifBtnRef = useRef<HTMLDivElement>(null);
+  const accountBtnRef = useRef<HTMLDivElement>(null);
 
-  const handleReserve = () => {
-    if (!user) {
-      alert('Please log in or sign up to make a reservation!');
-      window.location.href = `/login?redirect=/checkout`;
-      return;
-    }
-    if (!startDate || !endDate) { setSubmitError('Please select both start and end dates.'); return; }
-    if (new Date(endDate) <= new Date(startDate)) { setSubmitError('End date must be after start date.'); return; }
+  const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
+
+  const closeAll = () => {
     setCartOpen(false);
-    router.push('/checkout');
+    setNotificationsOpen(false);
+    setAccountOpen(false);
   };
 
-  // Hide category bar on scroll down
+  const toggleCart = () => { closeAll(); setCartOpen((v) => !v); };
+  const toggleNotifications = () => { closeAll(); setNotificationsOpen((v) => !v); };
+  const toggleAccount = () => { closeAll(); setAccountOpen((v) => !v); };
+
+  // Hide category bar on scroll down — with delta threshold to prevent oscillation
   useEffect(() => {
+    const DELTA = 8; // px — minimum scroll amount before toggling
     const handleScroll = () => {
       const currentY = window.scrollY;
-      if (currentY < 10) setCatBarVisible(true);
-      else if (currentY > lastScrollY.current) setCatBarVisible(false);
-      else setCatBarVisible(true);
-      lastScrollY.current = currentY;
+      const diff = currentY - lastScrollY.current;
+      if (currentY < 10) {
+        setCatBarVisible(true);
+      } else if (diff > DELTA) {
+        // scrolled down enough
+        setCatBarVisible(false);
+        lastScrollY.current = currentY;
+      } else if (diff < -DELTA) {
+        // scrolled up enough
+        setCatBarVisible(true);
+        lastScrollY.current = currentY;
+      }
+      // if |diff| < DELTA, do nothing — prevents oscillation
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Close cart on outside click
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (cartRef.current && !cartRef.current.contains(e.target as Node)) {
-        setCartOpen(false);
-      }
-    };
-    if (cartOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [cartOpen]);
-
-  const openCart = () => {
-    setCartOpen(true);
-  };
 
   const categories = [
     { name: 'Cameras & Photography', href: `/category?name=${encodeURIComponent('Cameras & Photography')}` },
@@ -96,18 +85,25 @@ export default function Navbar() {
             <nav className="flex items-center gap-5 font-medium">
               {user ? (
                 <>
-                  <Link href="/dashboard" className="hover:text-[#F97316] transition-colors">Dashboard</Link>
-                  <Link href="/reservations" className="hover:text-[#F97316] transition-colors">Reservations</Link>
-                  {user.role && ['ADMIN', 'STAFF'].includes(user.role) && (
-                    <Link href="/customers" className="hover:text-[#F97316] transition-colors">Customers</Link>
+                  {/* Only show dashboard/admin links for staff */}
+                  {['ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR'].includes(user.role) && (
+                    <Link href="/dashboard" className="hover:text-[#F97316] transition-colors">Dashboard</Link>
                   )}
-                  {user.role && ['ADMIN', 'WAREHOUSE_OPERATOR'].includes(user.role) && (
+                  {['ADMIN', 'STAFF'].includes(user.role) && (
+                    <Link href="/reservations" className="hover:text-[#F97316] transition-colors">Reservations</Link>
+                  )}
+                  {['ADMIN', 'STAFF'].includes(user.role) && (
+                    <Link href="/equipment" className="hover:text-[#F97316] transition-colors">Equipment</Link>
+                  )}
+                  {['ADMIN', 'WAREHOUSE_OPERATOR'].includes(user.role) && (
                     <Link href="/inventory" className="hover:text-[#F97316] transition-colors">Inventory</Link>
                   )}
-                  {user.role === 'ADMIN' && (
-                    <Link href="/payments" className="hover:text-[#F97316] transition-colors">Payments</Link>
+                  {['ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR'].includes(user.role) && (
+                    <Link href="/settings" className="hover:text-[#F97316] transition-colors">Settings</Link>
                   )}
-                  <Link href="/settings" className="hover:text-[#F97316] transition-colors">Settings</Link>
+                  {['CUSTOMER'].includes(user.role) && (
+                    <Link href="/contact" className="hover:text-[#F97316] transition-colors">Contact Us</Link>
+                  )}
                 </>
               ) : (
                 <>
@@ -117,9 +113,16 @@ export default function Navbar() {
               )}
             </nav>
             <div className="flex items-center gap-2 border-l border-slate-700 pl-4">
-              {['f', 't', 'y', 'i'].map((icon, i) => (
-                <a key={i} href="#" className="w-5 h-5 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center text-[10px] hover:bg-[#F97316] hover:text-white transition-colors">
-                  {icon}
+              {[
+                { name: 'Facebook', url: 'https://www.facebook.com', svg: <path d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V2.14c-.326-.043-1.557-.14-2.857-.14C11.928 2 10 3.657 10 6.7v2.8H7v4h3V22h4v-8.5z"/> },
+                { name: 'X', url: 'https://x.com', svg: <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/> },
+                { name: 'YouTube', url: 'https://youtube.com', svg: <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.377.55a3.016 3.016 0 0 0-2.122 2.136C0 8.07 0 12 0 12s0 3.93.501 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.55 9.377.55 9.377.55s7.505 0 9.377-.55a3.016 3.016 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/> },
+                { name: 'Instagram', url: 'https://instagram.com', svg: <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/> }
+              ].map((icon, i) => (
+                <a key={i} href={icon.url} target="_blank" rel="noopener noreferrer" aria-label={icon.name} className="w-5 h-5 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center hover:bg-[#F97316] hover:text-white transition-colors">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-2.5 h-2.5">
+                    {icon.svg}
+                  </svg>
                 </a>
               ))}
             </div>
@@ -142,7 +145,7 @@ export default function Navbar() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (searchQuery.trim()) window.location.href = `/equipment?search=${encodeURIComponent(searchQuery.trim())}`;
+              if (searchQuery.trim()) window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
             }}
             className="w-full flex items-center"
           >
@@ -165,10 +168,10 @@ export default function Navbar() {
         {/* Right Actions */}
         <div className="flex items-center gap-4 md:gap-6 shrink-0">
 
-          {/* Cart Button with Dropdown */}
-          <div className="relative" ref={cartRef}>
+          {/* Cart */}
+          <div className="relative" ref={cartBtnRef}>
             <button
-              onClick={openCart}
+              onClick={toggleCart}
               className="flex items-center gap-2 text-slate-700 hover:text-[#F97316] transition-colors relative focus:outline-none"
               aria-label="View Cart"
             >
@@ -178,161 +181,41 @@ export default function Navbar() {
                   {totalItems}
                 </span>
               )}
-              <span className="font-bold text-sm hidden md:inline">Cart</span>
             </button>
-
-            {/* Cart Dropdown Panel */}
-            {cartOpen && (
-              <div className="absolute right-0 top-full mt-3 w-[380px] bg-white border border-slate-200 rounded-xl shadow-2xl z-[200] flex flex-col max-h-[80vh]">
-                {/* Arrow notch */}
-                <div className="absolute -top-2 right-5 w-4 h-4 bg-white border-l border-t border-slate-200 rotate-45" />
-
-                {/* Header */}
-                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#F97316] text-xl">shopping_cart</span>
-                    <h2 className="text-base font-bold text-[#0F172A]">Your Rental Cart</h2>
-                    {totalItems > 0 && (
-                      <span className="bg-[#F97316] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{totalItems}</span>
-                    )}
-                  </div>
-                  <button onClick={() => setCartOpen(false)} className="text-slate-400 hover:text-slate-600 focus:outline-none">
-                    <span className="material-symbols-outlined text-xl">close</span>
-                  </button>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto px-5 py-4">
-                  {cart.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-14 text-center space-y-2">
-                      <span className="material-symbols-outlined text-4xl text-slate-300">shopping_cart_off</span>
-                      <p className="text-sm text-slate-500 font-medium">Your cart is empty.</p>
-                      <button onClick={() => setCartOpen(false)} className="text-xs text-[#F97316] hover:underline font-bold">
-                        Continue Browsing
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {/* Items */}
-                      <div className="divide-y divide-slate-100">
-                        {cart.map((item) => {
-                          const img = item.equipment.images?.[0] || 'https://pub-ec99c8a8fe684a6a931dd2f902e53e4b.r2.dev/Application%20images/tools%20(1).png';
-                          return (
-                            <div key={item.equipment.id} className="py-3 flex gap-3">
-                              <div className="w-14 h-14 bg-slate-50 border border-slate-100 rounded-lg overflow-hidden flex-shrink-0">
-                                <img src={img} alt={item.equipment.name} className="w-full h-full object-cover" />
-                              </div>
-                              <div className="flex-grow min-w-0">
-                                <h4 className="font-bold text-xs text-[#0F172A] truncate">{item.equipment.name}</h4>
-                                <p className="text-[11px] text-slate-500 mt-0.5">${Number(item.equipment.rentalPrice ?? 0).toFixed(2)}/day</p>
-                                <div className="flex items-center gap-2 mt-1.5">
-                                  <button
-                                    onClick={() => updateQuantity(item.equipment.id, item.quantity - 1)}
-                                    className="w-5 h-5 rounded border border-slate-200 text-slate-500 hover:border-[#F97316] hover:text-[#F97316] flex items-center justify-center text-xs font-bold"
-                                  >-</button>
-                                  <span className="text-xs font-bold text-slate-700 w-4 text-center">{item.quantity}</span>
-                                  <button
-                                    onClick={() => updateQuantity(item.equipment.id, item.quantity + 1)}
-                                    className="w-5 h-5 rounded border border-slate-200 text-slate-500 hover:border-[#F97316] hover:text-[#F97316] flex items-center justify-center text-xs font-bold"
-                                  >+</button>
-                                  <div className="flex-grow" />
-                                  <button
-                                    onClick={() => removeFromCart(item.equipment.id)}
-                                    className="text-[11px] text-red-400 hover:text-red-600 flex items-center gap-0.5"
-                                  >
-                                    <span className="material-symbols-outlined text-[11px]">delete</span>Remove
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Rental Dates */}
-                      <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
-                        <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Rental Period</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-0.5">Start</label>
-                            <input
-                              type="date"
-                              value={startDate}
-                              onChange={(e) => setStartDate(e.target.value)}
-                              min={new Date().toISOString().split('T')[0]}
-                              className="w-full bg-white border border-slate-200 rounded px-2 py-1.5 text-[11px] text-slate-700 focus:outline-none focus:border-[#F97316]"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-0.5">End</label>
-                            <input
-                              type="date"
-                              value={endDate}
-                              onChange={(e) => setEndDate(e.target.value)}
-                              min={startDate || new Date().toISOString().split('T')[0]}
-                              className="w-full bg-white border border-slate-200 rounded px-2 py-1.5 text-[11px] text-slate-700 focus:outline-none focus:border-[#F97316]"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer */}
-                {cart.length > 0 && (
-                  <div className="px-5 py-4 border-t border-slate-100 bg-slate-50 rounded-b-xl space-y-3">
-                    <div className="space-y-1 text-xs text-slate-600">
-                      <div className="flex justify-between">
-                        <span>Duration:</span>
-                        <span className="font-bold text-slate-800">{duration} {duration === 1 ? 'day' : 'days'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Rental Cost:</span>
-                        <span className="font-bold text-slate-800">${subtotal.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Security Deposit:</span>
-                        <span className="font-bold text-slate-800">${totalDeposit.toFixed(2)}</span>
-                      </div>
-                      <div className="h-px bg-slate-200" />
-                      <div className="flex justify-between text-sm font-extrabold text-[#0F172A]">
-                        <span>Total Estimated:</span>
-                        <span className="text-[#F97316]">${grandTotal.toFixed(2)}</span>
-                      </div>
-                    </div>
-
-                    {submitError && (
-                      <div className="p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-xs">error</span>
-                        <span>{submitError}</span>
-                      </div>
-                    )}
-
-                    <button
-                      onClick={handleReserve}
-                      className="w-full bg-[#F97316] hover:bg-orange-600 text-white font-bold py-2.5 rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
-                    >
-                      <span className="material-symbols-outlined text-sm">calendar_month</span>Confirm Reservation
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+            <CartModal open={cartOpen} onClose={() => setCartOpen(false)} />
           </div>
 
-          {/* My Reservations */}
-          <Link href="/reservations" className="flex items-center gap-2 text-[#334155] hover:text-orange-600 transition-colors">
-            <span className="material-symbols-outlined text-2xl">book_online</span>
-            <span className="font-bold text-sm hidden sm:inline">My Reservations</span>
-          </Link>
+          {/* Notifications — only for logged-in users */}
+          {user && (
+            <div className="relative" ref={notifBtnRef}>
+              <button
+                onClick={toggleNotifications}
+                className="flex items-center gap-2 text-slate-700 hover:text-[#F97316] transition-colors relative focus:outline-none"
+                aria-label="Notifications"
+              >
+                <div className="relative inline-flex items-center">
+                  <span className="material-symbols-outlined text-2xl">notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </div>
+              </button>
+              <NotificationsModal
+                open={notificationsOpen}
+                onClose={() => setNotificationsOpen(false)}
+                onUnreadCountChange={setUnreadCount}
+              />
+            </div>
+          )}
 
           {/* Account */}
-          <div className="relative">
+          <div className="relative" ref={accountBtnRef}>
             {user ? (
-              <div className="relative">
+              <>
                 <button
-                  onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
+                  onClick={toggleAccount}
                   className="flex items-center gap-2 text-left hover:text-[#F97316] transition-colors focus:outline-none"
                 >
                   <span className="material-symbols-outlined text-2xl text-slate-700">person</span>
@@ -343,21 +226,8 @@ export default function Navbar() {
                     </span>
                   </div>
                 </button>
-                {accountDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-md shadow-lg py-1 z-50">
-                    <div className="px-4 py-2 border-b border-slate-100 text-xs text-slate-500">
-                      Signed in as <p className="font-bold text-slate-800 truncate">{user.email}</p>
-                    </div>
-                    <Link href="/dashboard" onClick={() => setAccountDropdownOpen(false)} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Dashboard</Link>
-                    <Link href="/reservations" onClick={() => setAccountDropdownOpen(false)} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">My Rentals</Link>
-                    <Link href="/settings" onClick={() => setAccountDropdownOpen(false)} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Settings</Link>
-                    <button
-                      onClick={() => { setAccountDropdownOpen(false); logout(); }}
-                      className="w-full text-left px-4 py-2 text-sm text-[#F97316] hover:bg-orange-50 font-medium"
-                    >Log Out</button>
-                  </div>
-                )}
-              </div>
+                <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
+              </>
             ) : (
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-2xl text-slate-700">person</span>
@@ -370,7 +240,6 @@ export default function Navbar() {
               </div>
             )}
           </div>
-
 
           {/* Mobile Menu Toggle */}
           <button
@@ -414,19 +283,25 @@ export default function Navbar() {
             <div className="flex flex-col gap-2">
               {user ? (
                 <>
-                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Dashboard</Link>
+                  {['ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR'].includes(user.role) && (
+                    <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Dashboard</Link>
+                  )}
                   <Link href="/equipment" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Equipment</Link>
-                  <Link href="/reservations" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Reservations</Link>
-                  {user.role && ['ADMIN', 'STAFF'].includes(user.role) && (
+                  {['ADMIN', 'STAFF'].includes(user.role) && (
+                    <Link href="/reservations" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Reservations</Link>
+                  )}
+                  {['ADMIN', 'STAFF'].includes(user.role) && (
                     <Link href="/customers" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Customers</Link>
                   )}
-                  {user.role && ['ADMIN', 'WAREHOUSE_OPERATOR'].includes(user.role) && (
+                  {['ADMIN', 'WAREHOUSE_OPERATOR'].includes(user.role) && (
                     <Link href="/inventory" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Inventory</Link>
                   )}
                   {user.role === 'ADMIN' && (
                     <Link href="/payments" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Payments</Link>
                   )}
-                  <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Settings</Link>
+                  {['ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR'].includes(user.role) && (
+                    <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Settings</Link>
+                  )}
                 </>
               ) : (
                 <>
@@ -455,7 +330,7 @@ export default function Navbar() {
             {user ? (
               <div className="flex flex-col gap-2">
                 <span className="text-xs text-slate-500">Signed in as <strong className="text-slate-800">{user.email}</strong></span>
-                <button onClick={() => { setMobileMenuOpen(false); logout(); }} className="text-left text-sm font-bold text-[#F97316]">Log Out</button>
+                <button onClick={() => { setMobileMenuOpen(false); window.location.href = '/settings'; }} className="text-left text-sm font-bold text-slate-600">Settings</button>
               </div>
             ) : (
               <div className="flex items-center gap-3">

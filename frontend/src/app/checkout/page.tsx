@@ -176,10 +176,10 @@ export default function CheckoutPage() {
                     <div className="flex-grow min-w-0">
                       <h4 className="font-bold text-sm text-[#0F172A] truncate">{item.equipment.name}</h4>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        {item.quantity} × ${Number(item.equipment.rentalPrice ?? 0).toFixed(2)}/day × {duration} {duration === 1 ? 'day' : 'days'}
+                        {item.quantity} × Rs.{Number(item.equipment.rentalPrice ?? 0).toFixed(2)}/day × {duration} {duration === 1 ? 'day' : 'days'}
                       </p>
                     </div>
-                    <div className="text-sm font-bold text-[#0F172A] shrink-0">${lineTotal.toFixed(2)}</div>
+                    <div className="text-sm font-bold text-[#0F172A] shrink-0">Rs.{lineTotal.toFixed(2)}</div>
                   </div>
                 );
               })}
@@ -199,16 +199,16 @@ export default function CheckoutPage() {
             <div className="space-y-2 text-sm border-t border-slate-100 pt-4">
               <div className="flex justify-between text-slate-600">
                 <span>Rental Cost</span>
-                <span className="font-bold">${subtotal.toFixed(2)}</span>
+                <span className="font-bold">Rs.{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>Security Deposit <span className="text-xs text-slate-400">(Refundable)</span></span>
-                <span className="font-bold">${deposit.toFixed(2)}</span>
+                <span className="font-bold">Rs.{deposit.toFixed(2)}</span>
               </div>
               <div className="h-px bg-slate-100 my-1" />
               <div className="flex justify-between text-base font-extrabold text-[#0F172A]">
                 <span>Total Due</span>
-                <span className="text-[#F97316] text-lg">${grandTotal.toFixed(2)}</span>
+                <span className="text-[#F97316] text-lg">Rs.{grandTotal.toFixed(2)}</span>
               </div>
             </div>
 

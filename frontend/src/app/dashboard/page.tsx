@@ -126,7 +126,7 @@ function BarChart({ data }: { data: { label: string; value: number }[] }) {
           <div
             className="w-full rounded-t-lg bg-[#F97316] opacity-80 group-hover:opacity-100 transition-all"
             style={{ height: `${(d.value / max) * 100}%`, minHeight: 4 }}
-            title={`$${d.value.toLocaleString()}`}
+            title={`Rs.${d.value.toLocaleString()}`}
           />
           <span className="text-[9px] text-slate-400 hidden sm:block whitespace-nowrap">
             {d.label}
@@ -268,7 +268,7 @@ export default function DashboardPage() {
             if (!popMap.has(eqId)) {
               popMap.set(eqId, { 
                 name: i.equipment?.name || 'Unknown', 
-                price: `$${i.unitPrice || i.equipment?.rentalPrice || 0}/day`, 
+                price: `Rs.${i.unitPrice || i.equipment?.rentalPrice || 0}/day`, 
                 bookings: 0,
                 img: i.equipment?.imageUrl || 'https://pub-ec99c8a8fe684a6a931dd2f902e53e4b.r2.dev/Application%20images/tools%20(1).png'
               });
@@ -408,7 +408,7 @@ export default function DashboardPage() {
                 />
                 <StatCard
                   label="Today's Revenue"
-                  value={`$${resStats.todayRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  value={`Rs.${resStats.todayRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   href="/reservations"
                   trend="Syncs with payments"
                 />
@@ -442,7 +442,7 @@ export default function DashboardPage() {
                     {/* Y-axis + bars */}
                     <div className="flex gap-2 h-32 items-end">
                       <div className="flex flex-col justify-between h-full text-right shrink-0">
-                        {['$5k', '$4k', '$3k', '$2k', '$1k', '$0'].map((l) => (
+                        {['Rs.5k', 'Rs.4k', 'Rs.3k', 'Rs.2k', 'Rs.1k', 'Rs.0'].map((l) => (
                           <span key={l} className="text-[9px] text-slate-300">{l}</span>
                         ))}
                       </div>
@@ -455,7 +455,7 @@ export default function DashboardPage() {
                   {/* Summary */}
                   <div className="sm:w-[140px] shrink-0 border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0 sm:pl-5 flex flex-col justify-between">
                     <div>
-                      <p className="text-2xl font-extrabold text-[#0F172A]">${(resStats.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      <p className="text-2xl font-extrabold text-[#0F172A]">Rs.{(resStats.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                       <p className="text-xs text-slate-400 mb-4">Total Revenue</p>
                       <div className="space-y-3">
                         <div className="flex items-center gap-2">
@@ -463,7 +463,7 @@ export default function DashboardPage() {
                             <span className="material-symbols-outlined text-xs text-green-600">payments</span>
                           </div>
                           <div>
-                            <p className="text-xs font-extrabold text-[#0F172A]">${((resStats.totalRevenue || 0) * 0.9).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                            <p className="text-xs font-extrabold text-[#0F172A]">Rs.{((resStats.totalRevenue || 0) * 0.9).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                             <p className="text-[10px] text-slate-400">Total Income</p>
                           </div>
                         </div>
@@ -472,7 +472,7 @@ export default function DashboardPage() {
                             <span className="material-symbols-outlined text-xs text-red-500">trending_down</span>
                           </div>
                           <div>
-                            <p className="text-xs font-extrabold text-[#0F172A]">$25,580</p>
+                            <p className="text-xs font-extrabold text-[#0F172A]">Rs.25,580</p>
                             <p className="text-[10px] text-slate-400">Total Expenses</p>
                           </div>
                         </div>
@@ -540,7 +540,7 @@ export default function DashboardPage() {
                                 </span>
                               </td>
                               <td className="px-5 py-3.5 font-extrabold text-[#0F172A]">
-                                {typeof price === 'number' ? `$${price.toFixed(2)}` : price}
+                                {typeof price === 'number' ? `Rs.${price.toFixed(2)}` : price}
                               </td>
                             </tr>
                           );

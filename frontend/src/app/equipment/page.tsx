@@ -756,10 +756,10 @@ export default function EquipmentPage() {
                               <span className="px-2 py-0.5 bg-slate-100 rounded-full text-slate-600 font-medium">{catName}</span>
                             </td>
                             <td className="px-4 py-3 text-sm font-extrabold text-[#0F172A] whitespace-nowrap">
-                              ${Number(item.rentalPrice ?? 0).toFixed(2)}
+                              Rs.{Number(item.rentalPrice ?? 0).toFixed(2)}
                             </td>
                             <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">
-                              ${Number(item.deposit ?? 0).toFixed(2)}
+                              Rs.{Number(item.deposit ?? 0).toFixed(2)}
                             </td>
                             <td className="px-4 py-3 text-xs font-bold text-[#0F172A] whitespace-nowrap text-center">
                               {item.stockQuantity ?? 0}

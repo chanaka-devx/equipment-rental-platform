@@ -492,7 +492,7 @@ function InventoryDetailModal({
               <div className="col-span-2 sm:col-span-1">
                 <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Total Amount</span>
                 <span className="font-extrabold text-[#F97316] text-sm">
-                  {typeof price === 'number' ? `$${Number(price).toFixed(2)}` : (price || '—')}
+                  {typeof price === 'number' ? `Rs.${Number(price).toFixed(2)}` : (price || '—')}
                 </span>
               </div>
             </div>
@@ -521,8 +521,8 @@ function InventoryDetailModal({
                             </div>
                           </div>
                           <div className="text-right shrink-0 text-xs">
-                            <p className="font-bold text-[#0F172A]">${unitPrice} × {qty}</p>
-                            <p className="text-[10px] font-extrabold text-[#F97316]">${(Number(unitPrice) * qty).toFixed(2)}</p>
+                            <p className="font-bold text-[#0F172A]">Rs.{unitPrice} × {qty}</p>
+                            <p className="text-[10px] font-extrabold text-[#F97316]">Rs.{(Number(unitPrice) * qty).toFixed(2)}</p>
                           </div>
                         </div>
                         {/* Per-item inventory buttons */}
@@ -935,7 +935,7 @@ export default function InventoryPage() {
                               {name}
                             </td>
                             <td className="px-4 py-3 text-sm font-semibold text-[#0F172A] whitespace-nowrap">
-                              {typeof price === 'number' ? `$${Number(price).toFixed(2)}` : price}
+                              {typeof price === 'number' ? `Rs.${Number(price).toFixed(2)}` : price}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
                               <StatusBadge status={r.status} />

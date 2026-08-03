@@ -27,7 +27,9 @@ export default function LoginPage() {
       });
       const { access_token, refresh_token, user: userData } = res.data;
       login(userData || { email: data.email, role: 'USER' }, { access_token, refresh_token });
-      router.push('/dashboard');
+      const staffRoles = ['ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR'];
+      const destination = staffRoles.includes(userData?.role) ? '/dashboard' : '/';
+      router.push(destination);
     } catch (error: any) {
       console.error('Login failed', error);
       const msg = error.response?.data?.message;
