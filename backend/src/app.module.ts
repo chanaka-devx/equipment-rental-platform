@@ -20,8 +20,9 @@ dotenv.config();
   imports: [
     BullModule.forRoot({
       connection: {
-        host: process.env.REDIS_HOST,
-        port: Number(process.env.REDIS_PORT),
+        host: process.env.REDISHOST,
+        port: Number(process.env.REDISPORT),
+        password: process.env.REDISPASSWORD,
       },
     }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 20 }]),
