@@ -90,8 +90,8 @@ export default function CheckoutPage() {
   // ─── Success State ─────────────────────────────────────────────────────────
   if (step === 'success') {
     return (
-      <main className="min-h-screen w-full bg-[#F8FAFC] flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-10 text-center space-y-6">
+      <main className="flex-1 w-full min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-[420px] min-w-[300px] bg-white rounded-2xl shadow-xl p-10 text-center space-y-6">
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
             <span className="material-symbols-outlined text-4xl text-green-500">check_circle</span>
           </div>
@@ -128,8 +128,8 @@ export default function CheckoutPage() {
   // ─── Processing State ──────────────────────────────────────────────────────
   if (step === 'processing') {
     return (
-      <main className="min-h-screen w-full bg-[#F8FAFC] flex items-center justify-center p-6">
-        <div className="max-w-sm w-full bg-white rounded-2xl shadow-xl p-12 text-center space-y-5">
+      <main className="flex-1 w-full min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-[360px] min-w-[300px] bg-white rounded-2xl shadow-xl p-12 text-center space-y-5">
           <div className="w-16 h-16 border-4 border-[#F97316] border-t-transparent rounded-full animate-spin mx-auto" />
           <div>
             <h2 className="text-xl font-bold text-[#0F172A]">Processing Payment…</h2>
