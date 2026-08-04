@@ -16,14 +16,17 @@ export class ReservationsController {
     return this.reservationsService.create(req.user.userId, createReservationDto);
   }
 
-  @Get()
-  findAll() {
-    return this.reservationsService.findAll();
-  }
-
+  // NOTE: 'my-reservations' MUST be before ':id' to avoid being swallowed as a param
   @Get('my-reservations')
   findMyReservations(@Req() req) {
     return this.reservationsService.findByUser(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'STAFF')
+  @Get()
+  findAll() {
+    return this.reservationsService.findAll();
   }
 
   @Get(':id')

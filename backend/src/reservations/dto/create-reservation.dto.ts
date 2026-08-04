@@ -1,4 +1,4 @@
-import { IsDateString, IsInt, IsUUID, ValidateNested, Min } from 'class-validator';
+import { IsArray, IsDateString, IsInt, IsUUID, ValidateNested, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ReservationItemDto {
@@ -13,5 +13,6 @@ export class ReservationItemDto {
 export class CreateReservationDto {
   @IsDateString() startDate: string;
   @IsDateString() endDate: string;
+  @IsArray()
   @ValidateNested({ each: true }) @Type(() => ReservationItemDto) items: ReservationItemDto[];
 }

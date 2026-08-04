@@ -20,9 +20,7 @@ export class PaymentsService {
   async simulatePaymentResult(paymentId: string, outcome: 'PAID' | 'FAILED') {
     const payment = await this.paymentsRepository.updateStatus(paymentId, outcome);
     
-    if (outcome === 'PAID') {
-      await this.reservationsRepository.updateStatus(payment.reservationId, 'APPROVED');
-    }
+    // Note: Reservation remains PENDING. Admin/Staff must manually approve it.
     
     return payment;
   }

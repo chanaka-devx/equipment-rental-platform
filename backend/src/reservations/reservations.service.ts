@@ -48,30 +48,21 @@ export class ReservationsService {
       }
     }
 
-    // Only after ALL items pass, hand off to the Reservation repository
-    return this.createWithItems(userId, startDate, endDate, dto.items);
-  }
-
-    async createWithItems(userId: string, startDate: Date, endDate: Date, items: ReservationItemDto[]) {
+    // Fetch prices and build items with numeric unitPrice for the repository
     const equipmentList = await this.prisma.equipment.findMany({
-      where: { id: { in: items.map(i => i.equipmentId) } },
+      where: { id: { in: dto.items.map(i => i.equipmentId) } },
     });
 
-    return this.prisma.reservation.create({
-      data: {
-        userId,
-        startDate,
-        endDate,
-        status: 'PENDING',
-        items: {
-          create: items.map((item) => {
-            const eq = equipmentList.find(e => e.id === item.equipmentId);
-            return { equipmentId: item.equipmentId, quantity: item.quantity, unitPrice: eq!.rentalPrice };
-          }),
-        },
-      },
-      include: { items: true },
+    const itemsWithPrice = dto.items.map((item) => {
+      const eq = equipmentList.find(e => e.id === item.equipmentId)!;
+      return {
+        equipmentId: item.equipmentId,
+        quantity: item.quantity,
+        unitPrice: Number(eq.rentalPrice), // convert Prisma.Decimal → number
+      };
     });
+
+    return this.reservationsRepository.createWithItems(userId, startDate, endDate, itemsWithPrice);
   }
 
   async updateStatus(id: string, newStatus: ReservationStatus, userRole?: string) {

@@ -10,12 +10,18 @@ dotenv.config();
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
-    const pool = new Pool({ 
-      connectionString: process.env.DATABASE_URL,
-      ssl: {
-        ca: process.env.AIVEN_CA_CERT,
-        rejectUnauthorized: true,
-      },
+    const caCert = process.env.AIVEN_CA_CERT?.replace(/\\n/g, '\n');
+    // Strip sslmode from URL — pg v8+ treats sslmode=require as verify-full
+    // which overrides the ssl options object and rejects Aiven's cert.
+    const connectionString = process.env.DATABASE_URL
+      ?.replace(/[?&]sslmode=[^&]*/g, '')
+      .replace(/\?$/, '');
+
+    const pool = new Pool({
+      connectionString,
+      ssl: caCert
+        ? { ca: caCert, rejectUnauthorized: true }
+        : { rejectUnauthorized: false },
     });
     const adapter = new PrismaPg(pool);
     // @ts-ignore

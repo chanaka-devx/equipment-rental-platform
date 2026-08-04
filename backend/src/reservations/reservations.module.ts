@@ -10,6 +10,6 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
   imports: [PrismaModule, EquipmentModule, forwardRef(() => NotificationsModule)],
   controllers: [ReservationsController],
   providers: [ReservationsService, ReservationsRepository],
-  exports: [ReservationsRepository],
+  exports: [ReservationsRepository, ReservationsService],
 })
 export class ReservationsModule {}
