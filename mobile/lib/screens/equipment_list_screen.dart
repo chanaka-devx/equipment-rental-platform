@@ -16,6 +16,7 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
   List equipment = [];
   bool _isLoading = true;
   String _selectedCategory = 'All';
+  String _searchQuery = '';
 
   List<String> _categories = ['All']; // Will be populated from API
 
@@ -93,6 +94,11 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
                     filled: false,
                   ),
                   style: Theme.of(context).textTheme.bodyMedium,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
                 ),
               ),
             ),
@@ -112,12 +118,18 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
         ? Center(child: CircularProgressIndicator(color: AppTheme.brandOrange))
         : Builder(
             builder: (context) {
-              final _filteredEquipment = _selectedCategory == 'All' 
-                ? equipment 
-                : equipment.where((e) {
-                    final catName = e['category']?['name'];
-                    return catName == _selectedCategory;
-                  }).toList();
+              final _filteredEquipment = equipment.where((e) {
+                final catName = e['category']?['name'];
+                final matchCat = _selectedCategory == 'All' || catName == _selectedCategory;
+                
+                final name = (e['name'] ?? '').toString().toLowerCase();
+                final desc = (e['description'] ?? '').toString().toLowerCase();
+                final matchSearch = _searchQuery.isEmpty || 
+                    name.contains(_searchQuery.toLowerCase()) || 
+                    desc.contains(_searchQuery.toLowerCase());
+                    
+                return matchCat && matchSearch;
+              }).toList();
 
               return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
