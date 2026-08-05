@@ -2,13 +2,29 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateEquipmentDto } from './dto/create-equipment.dto';
 import { UpdateEquipmentDto } from './dto/update-equipment.dto';
 import { EquipmentRepository } from './equipment.repository';
+import { UploadsService } from '../uploads/uploads.service';
+import * as QRCode from 'qrcode';
 
 @Injectable()
 export class EquipmentService {
-  constructor(private readonly equipmentRepository: EquipmentRepository) {}
+  constructor(
+    private readonly equipmentRepository: EquipmentRepository,
+    private readonly uploadsService: UploadsService,
+  ) {}
 
   async create(dto: CreateEquipmentDto) {
-    return this.equipmentRepository.create(dto);
+    const equipment = await this.equipmentRepository.create(dto);
+    
+    try {
+      const qrData = JSON.stringify({ id: equipment.id, name: equipment.name });
+      const qrBuffer = await QRCode.toBuffer(qrData, { type: 'png' });
+      const qrCodeUrl = await this.uploadsService.uploadQRCode(qrBuffer, equipment.name);
+      
+      return await this.equipmentRepository.update(equipment.id, { qrCodeUrl });
+    } catch (error) {
+      console.error('Failed to generate/upload QR code:', error);
+      return equipment;
+    }
   }
 
   async findOne(id: string) {

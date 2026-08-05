@@ -61,6 +61,7 @@ model Equipment {
   categoryId       String
   category         Category          @relation(fields: [categoryId], references: [id])
   reservationItems ReservationItem[]
+  qrCodeUrl        String?
   createdAt        DateTime          @default(now())
 
   @@index([categoryId])
