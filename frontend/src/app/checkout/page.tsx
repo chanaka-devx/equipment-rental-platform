@@ -44,7 +44,7 @@ export default function CheckoutPage() {
 
   // Format card number with spaces
   const formatCard = (v: string) =>
-    v.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+    v.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, 'Rs.1 ').trim();
 
   // Format expiry MM/YY
   const formatExpiry = (v: string) => {
@@ -307,7 +307,7 @@ export default function CheckoutPage() {
                 className="w-full bg-[#F97316] hover:bg-orange-600 text-white font-extrabold py-4 rounded-xl text-base transition-all shadow-lg shadow-orange-200 hover:shadow-orange-300 flex items-center justify-center gap-2 mt-2"
               >
                 <span className="material-symbols-outlined">lock</span>
-                Pay ${grandTotal.toFixed(2)}
+                Pay Rs.{grandTotal.toFixed(2)}
               </button>
 
               {/* Retry on error */}

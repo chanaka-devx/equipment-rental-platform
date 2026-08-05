@@ -17,10 +17,17 @@ export default function AccountModal({ open, onClose }: AccountModalProps) {
   const [reservationsOpen, setReservationsOpen] = useState(false);
 
   useEffect(() => {
+    if (!open) {
+      setProfileOpen(false);
+      setReservationsOpen(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
-        // Only close if profile modal is also not open, otherwise let profile handle it
-        if (!profileOpen) onClose();
+        // Only close if profile modal and reservations modal are also not open
+        if (!profileOpen && !reservationsOpen) onClose();
       }
     };
     if (open) document.addEventListener('mousedown', handler);

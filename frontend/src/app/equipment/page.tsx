@@ -747,9 +747,7 @@ export default function EquipmentPage() {
                 <table className="w-full text-sm min-w-[800px]">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-100">
-                      <th className="w-10 px-4 py-3">
-                        <input type="checkbox" className="rounded border-slate-300 cursor-pointer" />
-                      </th>
+                      
                       {[
                         { label: 'Name',           field: 'name' },
                         { label: 'Category',       field: 'category' },
@@ -761,7 +759,7 @@ export default function EquipmentPage() {
                         <th
                           key={label}
                           onClick={() => field && handleSort(field)}
-                          className={`px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap ${field ? 'cursor-pointer hover:text-[#F97316] select-none' : ''}`}
+                          className={`px-4 py-3 pl-5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap ${field ? 'cursor-pointer hover:text-[#F97316] select-none' : ''}`}
                         >
                           <span className="flex items-center gap-0.5">
                             {label}
@@ -807,10 +805,8 @@ export default function EquipmentPage() {
 
                         return (
                           <tr key={item.id} className="hover:bg-orange-50/30 transition-colors">
-                            <td className="px-4 py-3">
-                              <input type="checkbox" className="rounded border-slate-300 cursor-pointer" />
-                            </td>
-                            <td className="px-4 py-3">
+
+                            <td className="px-4 py-3 pl-5">
                               <p className="text-xs font-bold text-[#0F172A] truncate max-w-[180px]">{item.name}</p>
                               {item.description && (
                                 <p className="text-[10px] text-slate-400 truncate max-w-[180px]">{item.description}</p>
@@ -834,9 +830,14 @@ export default function EquipmentPage() {
                             {isAdmin && (
                               <td className="px-4 py-3 whitespace-nowrap">
                                 <div className="flex items-center gap-2">
+                                  <ActionMenu
+                                    item={item}
+                                    onEdit={() => setEditItem(item)}
+                                    onDelete={() => handleDelete(item.id)}
+                                  />
                                   {item.qrCodeUrl && (
                                     <button
-                                      className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-white border border-blue-200 hover:bg-blue-500 rounded-lg px-2.5 py-1.5 transition-all bg-white"
+                                      className="flex items-center justify-center text-slate-500 hover:text-[#F97316] border border-slate-200 hover:border-[#F97316] rounded-lg w-9 h-9 transition-all bg-white shadow-sm"
                                       title="Download QR"
                                       onClick={async () => {
                                         try {
@@ -855,15 +856,9 @@ export default function EquipmentPage() {
                                         }
                                       }}
                                     >
-                                      <span className="material-symbols-outlined text-sm">qr_code_scanner</span>
-                                      QR Code
+                                      <span className="material-symbols-outlined text-sm">download</span>
                                     </button>
                                   )}
-                                  <ActionMenu
-                                    item={item}
-                                    onEdit={() => setEditItem(item)}
-                                    onDelete={() => handleDelete(item.id)}
-                                  />
                                 </div>
                               </td>
                             )}
