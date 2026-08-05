@@ -15,23 +15,66 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = <BottomNavigationBarItem>[
-      const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-      if (isStaff) const BottomNavigationBarItem(icon: Icon(Icons.event_note), label: 'Reservations'),
-      const BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Cart'),
-      const BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Account'),
+    // Define the items internally to easily map to custom widgets
+    final navItems = [
+      {'icon': Icons.home, 'label': 'Home'},
+      if (isStaff) {'icon': Icons.event_note, 'label': 'Reserved'},
+      {'icon': Icons.shopping_cart, 'label': 'Cart'},
+      {'icon': Icons.person, 'label': 'Profile'},
     ];
 
-    return BottomNavigationBar(
-      backgroundColor: AppTheme.surfaceContainerLowest,
-      selectedItemColor: AppTheme.brandOrange,
-      unselectedItemColor: AppTheme.outline,
-      selectedLabelStyle: Theme.of(context).textTheme.labelSmall,
-      unselectedLabelStyle: Theme.of(context).textTheme.labelSmall,
-      type: BottomNavigationBarType.fixed,
-      currentIndex: currentIndex,
-      onTap: onTap,
-      items: items,
+    return SafeArea(
+      child: Container(
+        margin: const EdgeInsets.only(left: 32, right: 32, bottom: 16),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: AppTheme.outline.withOpacity(0.2)),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: navItems.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
+            final isSelected = index == currentIndex;
+            
+            return GestureDetector(
+              onTap: () => onTap(index),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item['icon'] as IconData,
+                      color: isSelected ? AppTheme.brandOrange : AppTheme.outline,
+                      size: 20,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item['label'] as String,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: isSelected ? AppTheme.brandOrange : AppTheme.outline,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
     );
   }
 }
