@@ -1,10 +1,10 @@
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, VERSION_NEUTRAL, Get, UseGuards, Request } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Roles } from './auth/decorators/roles.decorator';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
-@Controller()
+@Controller({ version: ['1', VERSION_NEUTRAL] })
 export class AppController {
   constructor(private readonly appService: AppService) {}
 

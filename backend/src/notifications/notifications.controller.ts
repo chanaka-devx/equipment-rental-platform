@@ -1,8 +1,8 @@
-import { Controller, Get, Patch, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, VERSION_NEUTRAL, Get, Patch, Param, Req, UseGuards } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
-@Controller('notifications')
+@Controller({ path: 'notifications', version: ['1', VERSION_NEUTRAL] })
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 

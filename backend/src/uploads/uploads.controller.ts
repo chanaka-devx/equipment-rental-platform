@@ -1,9 +1,9 @@
-import { Controller, Post, Get, UseGuards, UseInterceptors, UploadedFile, Body, Req } from '@nestjs/common';
+import { Controller, VERSION_NEUTRAL, Post, Get, UseGuards, UseInterceptors, UploadedFile, Body, Req } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UploadsService } from './uploads.service';
 
-@Controller('uploads')
+@Controller({ path: 'uploads', version: ['1', VERSION_NEUTRAL] })
 @UseGuards(JwtAuthGuard) // any authenticated user can upload
 export class UploadsController {
   constructor(private readonly uploadsService: UploadsService) {}

@@ -1,10 +1,10 @@
-import { Controller, Post, Body, Logger, InternalServerErrorException } from '@nestjs/common';
+import { Controller, VERSION_NEUTRAL, Post, Body, Logger, InternalServerErrorException } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
-@Controller('auth')
+@Controller({ path: 'auth', version: ['1', VERSION_NEUTRAL] })
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
   constructor(private readonly authService: AuthService) {}

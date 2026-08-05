@@ -140,12 +140,12 @@ export default function CartModal({ open, onClose }: CartModalProps) {
         <div className="px-5 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl space-y-3 shrink-0">
           <div className="space-y-1.5 text-xs text-slate-600">
             <div className="flex justify-between"><span>Duration:</span><span className="font-bold text-slate-800">{duration} {duration === 1 ? 'day' : 'days'}</span></div>
-            <div className="flex justify-between"><span>Rental Cost:</span><span className="font-bold text-slate-800">${subtotal.toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Security Deposit:</span><span className="font-bold text-slate-800">${totalDeposit.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Rental Cost:</span><span className="font-bold text-slate-800">Rs.{subtotal.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Security Deposit:</span><span className="font-bold text-slate-800">Rs.{totalDeposit.toFixed(2)}</span></div>
             <div className="h-px bg-slate-200" />
             <div className="flex justify-between text-sm font-extrabold text-[#0F172A]">
               <span>Total Estimated:</span>
-              <span className="text-[#F97316]">${grandTotal.toFixed(2)}</span>
+              <span className="text-[#F97316]">Rs.{grandTotal.toFixed(2)}</span>
             </div>
           </div>
           {submitError && (
