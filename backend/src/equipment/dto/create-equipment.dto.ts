@@ -14,4 +14,8 @@ export class CreateEquipmentDto {
   images?: string[];
 
   @IsOptional() specifications?: Record<string, any>;
+  
+  @IsOptional()
+  @IsString()
+  qrCodeUrl?: string;
 }

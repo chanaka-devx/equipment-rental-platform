@@ -45,6 +45,20 @@ export class UploadsService {
     return this.uploadsRepository.create(userId, type, url);
   }
 
+  async uploadQRCode(buffer: Buffer, equipmentName: string): Promise<string> {
+    const safeName = equipmentName.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const key = `QR/${safeName}-${Date.now()}.png`;
+
+    await this.s3.send(new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Key: key,
+      Body: buffer,
+      ContentType: 'image/png',
+    }));
+
+    return `${process.env.R2_PUBLIC_URL}/${key}`;
+  }
+
   async findMyUploads(userId: string) {
     return this.uploadsRepository.findByUser(userId);
   }

@@ -25,6 +25,7 @@ interface Equipment {
   category?: { id?: string; name?: string };
   images?: string[];
   specifications?: Record<string, any>;
+  qrCodeUrl?: string;
   createdAt?: string;
 }
 
@@ -59,6 +60,18 @@ function EquipmentModal({
     stockQuantity: String(initial?.stockQuantity ?? ''),
     categoryId: initial?.categoryId ?? initial?.category?.id ?? '',
   });
+
+  const [specs, setSpecs] = useState<{key: string, value: string}[]>(
+    Object.entries(initial?.specifications || {}).map(([key, value]) => ({ key, value: String(value) }))
+  );
+
+  const addSpec = () => setSpecs([...specs, { key: '', value: '' }]);
+  const removeSpec = (index: number) => setSpecs(specs.filter((_, i) => i !== index));
+  const updateSpec = (index: number, field: 'key' | 'value', val: string) => {
+    const newSpecs = [...specs];
+    newSpecs[index][field] = val;
+    setSpecs(newSpecs);
+  };
 
   // Uploaded image URLs (start with any existing images when editing)
   const [imageUrls, setImageUrls] = useState<string[]>(initial?.images ?? []);
@@ -120,6 +133,13 @@ function EquipmentModal({
     setLoading(true);
     setError('');
     try {
+      const specifications = specs.reduce((acc, curr) => {
+        if (curr.key.trim() && curr.value.trim()) {
+          acc[curr.key.trim()] = curr.value.trim();
+        }
+        return acc;
+      }, {} as Record<string, any>);
+
       const payload: any = {
         name: form.name.trim(),
         description: form.description.trim(),
@@ -127,6 +147,7 @@ function EquipmentModal({
         deposit: parseFloat(form.deposit),
         stockQuantity: parseInt(form.stockQuantity, 10),
         categoryId: form.categoryId,
+        specifications: Object.keys(specifications).length > 0 ? specifications : undefined,
       };
       if (imageUrls.length) payload.images = imageUrls;
 
@@ -254,6 +275,49 @@ function EquipmentModal({
                   ))}
                 </select>
               </div>
+            </div>
+
+            {/* Specifications / Features */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Features / Specifications</label>
+                <button
+                  type="button"
+                  onClick={addSpec}
+                  className="text-xs text-[#F97316] hover:underline font-bold"
+                >
+                  + Add Feature
+                </button>
+              </div>
+              {specs.length === 0 ? (
+                <div className="text-xs text-slate-400 italic">No features added.</div>
+              ) : (
+                <div className="space-y-2">
+                  {specs.map((spec, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <input
+                        placeholder="Feature (e.g. Resolution)"
+                        value={spec.key}
+                        onChange={(e) => updateSpec(i, 'key', e.target.value)}
+                        className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:border-[#F97316] focus:ring-1 focus:ring-orange-200 outline-none transition-all"
+                      />
+                      <input
+                        placeholder="Value (e.g. 4K)"
+                        value={spec.value}
+                        onChange={(e) => updateSpec(i, 'value', e.target.value)}
+                        className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:border-[#F97316] focus:ring-1 focus:ring-orange-200 outline-none transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSpec(i)}
+                        className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-lg">delete</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* ── Images ──────────────────────────────────────────────── */}
@@ -769,11 +833,38 @@ export default function EquipmentPage() {
                             </td>
                             {isAdmin && (
                               <td className="px-4 py-3 whitespace-nowrap">
-                                <ActionMenu
-                                  item={item}
-                                  onEdit={() => setEditItem(item)}
-                                  onDelete={() => handleDelete(item.id)}
-                                />
+                                <div className="flex items-center gap-2">
+                                  {item.qrCodeUrl && (
+                                    <button
+                                      className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-white border border-blue-200 hover:bg-blue-500 rounded-lg px-2.5 py-1.5 transition-all bg-white"
+                                      title="Download QR"
+                                      onClick={async () => {
+                                        try {
+                                          const res = await fetch(item.qrCodeUrl as string);
+                                          const blob = await res.blob();
+                                          const url = window.URL.createObjectURL(blob);
+                                          const a = document.createElement('a');
+                                          a.href = url;
+                                          a.download = `QR-${item.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.png`;
+                                          document.body.appendChild(a);
+                                          a.click();
+                                          a.remove();
+                                          window.URL.revokeObjectURL(url);
+                                        } catch (err) {
+                                          window.open(item.qrCodeUrl, '_blank');
+                                        }
+                                      }}
+                                    >
+                                      <span className="material-symbols-outlined text-sm">qr_code_scanner</span>
+                                      QR Code
+                                    </button>
+                                  )}
+                                  <ActionMenu
+                                    item={item}
+                                    onEdit={() => setEditItem(item)}
+                                    onDelete={() => handleDelete(item.id)}
+                                  />
+                                </div>
                               </td>
                             )}
                           </tr>
