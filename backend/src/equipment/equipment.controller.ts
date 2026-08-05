@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete,Query, UseGuards,  } from '@nestjs/common';
+import { Controller, VERSION_NEUTRAL, Get, Post, Body, Patch, Param, Delete,Query, UseGuards,  } from '@nestjs/common';
 import { EquipmentService } from './equipment.service';
 import { CreateEquipmentDto } from './dto/create-equipment.dto';
 import { UpdateEquipmentDto } from './dto/update-equipment.dto';
@@ -6,7 +6,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
-@Controller('equipment')
+@Controller({ path: 'equipment', version: ['1', VERSION_NEUTRAL] })
 export class EquipmentController {
   constructor(private readonly equipmentService: EquipmentService) {}
 

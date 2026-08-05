@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, VERSION_NEUTRAL, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -6,7 +6,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@Controller('categories')
+@Controller({ path: 'categories', version: ['1', VERSION_NEUTRAL] })
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 

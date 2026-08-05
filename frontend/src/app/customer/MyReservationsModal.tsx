@@ -50,10 +50,10 @@ export default function MyReservationsModal({ open, onClose }: MyReservationsMod
   return (
     <div
       ref={ref}
-      className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-[480px] max-w-[calc(100vw-2rem)] bg-white border border-slate-200 rounded-2xl shadow-2xl z-[300] flex flex-col max-h-[75vh] overflow-hidden"
+      className="absolute right-0 top-full mt-3 w-[480px] max-w-[calc(100vw-2rem)] bg-white border border-slate-200 rounded-2xl shadow-2xl z-[300] flex flex-col max-h-[75vh] overflow-hidden"
     >
       {/* Notch */}
-      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-slate-200 rotate-45 z-10" />
+      <div className="absolute -top-2 right-5 w-4 h-4 bg-white border-l border-t border-slate-200 rotate-45 z-10" />
 
       {/* Header */}
       <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
@@ -116,7 +116,7 @@ export default function MyReservationsModal({ open, onClose }: MyReservationsMod
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-500 mt-0.5">{startDate} → {endDate}</p>
-                    <p className="text-xs font-bold text-[#F97316] mt-1">${Number(total).toFixed(2)}</p>
+                    <p className="text-xs font-bold text-[#F97316] mt-1">Rs.{Number(total).toFixed(2)}</p>
                   </div>
 
                   {/* Payment badge */}
