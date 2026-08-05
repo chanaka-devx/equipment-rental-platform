@@ -7,6 +7,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 export interface Equipment {
   id: string;
   name: string;
+  description?: string | null;
   rentalPrice?: number | string | null;
   deposit?: number | string | null;
   quantity?: number | null;
