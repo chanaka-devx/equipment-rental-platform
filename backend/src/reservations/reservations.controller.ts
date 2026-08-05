@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards } from '@nestjs/common';
+import { Controller, VERSION_NEUTRAL, Get, Post, Body, Patch, Param, Delete, Req, UseGuards } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
@@ -7,7 +7,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { ReservationStatus } from '@prisma/client';
 @UseGuards(JwtAuthGuard)
-@Controller('reservations')
+@Controller({ path: 'reservations', version: ['1', VERSION_NEUTRAL] })
 export class ReservationsController {
   constructor(private readonly reservationsService: ReservationsService) {}
 

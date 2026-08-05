@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param, Req, UseGuards, ParseIntPipe } from '@nestjs/common';
+import { Controller, VERSION_NEUTRAL, Post, Body, Param, Req, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -6,7 +6,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR')
-@Controller('inventory')
+@Controller({ path: 'inventory', version: ['1', VERSION_NEUTRAL] })
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
