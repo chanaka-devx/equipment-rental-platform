@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
 import 'reservation_Item_screen.dart';
+import 'qr_scanner_screen.dart';
 
 class StaffReservationsScreen extends StatefulWidget {
   const StaffReservationsScreen({super.key});
@@ -14,6 +15,7 @@ class StaffReservationsScreen extends StatefulWidget {
 
 class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
   final ApiService _apiService = ApiService();
+  final TextEditingController _searchController = TextEditingController();
   bool _isLoading = true;
   String _errorMsg = '';
   List<dynamic> _reservations = [];
@@ -23,6 +25,12 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
   void initState() {
     super.initState();
     _fetchReservations();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchReservations() async {
@@ -89,10 +97,14 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
       final equipName = (items != null && items.isNotEmpty && items[0]['equipment'] != null)
           ? items[0]['equipment']['name'].toString().toLowerCase()
           : '';
+      final equipId = (items != null && items.isNotEmpty && items[0]['equipment'] != null)
+          ? items[0]['equipment']['id'].toString().toLowerCase()
+          : '';
           
       final matchSearch = _searchQuery.isEmpty || 
           (res['id'] ?? '').toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
           (res['user']?['name'] ?? '').toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          equipId.contains(_searchQuery.toLowerCase()) ||
           equipName.contains(_searchQuery.toLowerCase());
       return matchSearch;
     }).toList();
@@ -121,6 +133,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                   border: Border.all(color: AppTheme.borderSubtle),
                 ),
                 child: TextField(
+                  controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Search...',
                     hintStyle: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppTheme.outline),
@@ -147,6 +160,25 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
           ),
           const SizedBox(width: 8),
         ],
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 90.0), // Push above the bottom nav bar
+        child: FloatingActionButton(
+          backgroundColor: AppTheme.brandOrange,
+          child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const QRScannerScreen()),
+            );
+            if (result != null && result is String) {
+              setState(() {
+                _searchQuery = result;
+                _searchController.text = result;
+              });
+            }
+          },
+        ),
       ),
       body: _buildBody(filteredReservations),
     );
