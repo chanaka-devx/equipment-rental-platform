@@ -57,6 +57,10 @@ export default function LoginPage() {
 
         {/* Login Card */}
         <div className="relative z-10 w-full max-w-[460px] bg-[#FFFFFF] border border-slate-200 rounded-lg shadow-xl p-6 md:p-8 my-auto">
+          <Link href="/" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-[#F97316] transition-colors mb-4">
+            <span className="material-symbols-outlined text-[18px] mr-1">arrow_back</span>
+            Back to Home
+          </Link>
           {/* Header & Branding */}
           <div className="text-center mb-6">
             <h1 className="font-headline-lg text-headline-lg font-extrabold text-[#0F172A] mt-1 mb-1">

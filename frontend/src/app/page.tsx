@@ -189,6 +189,7 @@ export default function LandingPage() {
                                 name: item.name,
                                 description: item.description,
                                 rentalPrice: item.rentalPrice,
+                                deposit: item.deposit,
                                 images: item.images,
                               });
                             }}

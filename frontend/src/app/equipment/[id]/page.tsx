@@ -79,6 +79,7 @@ export default function EquipmentDetailsPage() {
       name: equipment.name,
       description: equipment.description,
       rentalPrice: equipment.rentalPrice,
+      deposit: equipment.deposit,
       images: equipment.images,
     });
   };

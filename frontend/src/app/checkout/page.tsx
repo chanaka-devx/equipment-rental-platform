@@ -44,7 +44,7 @@ export default function CheckoutPage() {
 
   // Format card number with spaces
   const formatCard = (v: string) =>
-    v.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, 'Rs.1 ').trim();
+    v.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
 
   // Format expiry MM/YY
   const formatExpiry = (v: string) => {

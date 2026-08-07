@@ -14,6 +14,7 @@ interface Equipment {
   name: string;
   description?: string;
   rentalPrice?: number;
+  deposit?: number;
   images?: string[];
   category?: { name: string };
 }
@@ -124,6 +125,7 @@ function SearchResults() {
                             name: item.name,
                             description: item.description,
                             rentalPrice: item.rentalPrice,
+                            deposit: item.deposit,
                             images: item.images,
                           });
                         }}

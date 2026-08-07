@@ -109,6 +109,7 @@ function CategoryContent() {
                           name: item.name,
                           description: item.description,
                           rentalPrice: item.rentalPrice,
+                          deposit: item.deposit,
                           images: item.images,
                         });
                       }}
