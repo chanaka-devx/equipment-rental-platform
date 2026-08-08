@@ -111,6 +111,8 @@ function CategoryContent() {
                           rentalPrice: item.rentalPrice,
                           deposit: item.deposit,
                           images: item.images,
+                          requiresDocuments: item.requiresDocuments,
+                          requiredDocumentTypes: item.requiredDocumentTypes,
                         });
                       }}
                       className="text-xs font-bold text-slate-700 hover:text-[#F97316] transition-colors focus:outline-none flex items-center gap-1 relative z-10"

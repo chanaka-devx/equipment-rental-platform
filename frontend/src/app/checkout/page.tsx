@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
@@ -24,6 +24,48 @@ export default function CheckoutPage() {
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
+
+  // ── Document upload state ──────────────────────────────────────────────────
+  const [uploadedDocs, setUploadedDocs] = useState<Record<string, string>>({});
+  const [docUploadState, setDocUploadState] = useState<Record<string, 'idle' | 'uploading' | 'done' | 'error'>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Unique required document types from cart items that need documents
+  const requiredDocTypes = Array.from(
+    new Set(
+      cart
+        .filter((item) => item.equipment.requiresDocuments)
+        .flatMap((item) => item.equipment.requiredDocumentTypes ?? [])
+    )
+  );
+  const missingDocTypes = requiredDocTypes.filter((type) => !uploadedDocs[type]);
+  const allDocsReady = missingDocTypes.length === 0;
+
+  // Fetch user's existing uploaded documents on mount
+  useEffect(() => {
+    if (!user) return;
+    api.get('/auth/me').then((res) => {
+      setUploadedDocs((res.data?.uploadedDocuments as Record<string, string>) ?? {});
+    }).catch(() => {});
+  }, [user]);
+
+  // Upload a document for a specific type
+  const handleDocUpload = async (docType: string, file: File) => {
+    setDocUploadState((prev) => ({ ...prev, [docType]: 'uploading' }));
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'ID_DOCUMENT');
+      const res = await api.post('/uploads', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const url: string = res.data?.url ?? res.data?.data?.url ?? '';
+      await api.patch('/auth/me/documents', { documents: { [docType]: url } });
+      setUploadedDocs((prev) => ({ ...prev, [docType]: url }));
+      setDocUploadState((prev) => ({ ...prev, [docType]: 'done' }));
+    } catch {
+      setDocUploadState((prev) => ({ ...prev, [docType]: 'error' }));
+    }
+  };
+  // ──────────────────────────────────────────────────────────────────────────
 
   // Derived totals
   const getDuration = () => {
@@ -56,6 +98,10 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (!cardName || cardNumber.replace(/\s/g, '').length < 16 || expiry.length < 5 || cvv.length < 3) {
       setErrorMsg('Please fill in all card details correctly.');
+      return;
+    }
+    if (!allDocsReady) {
+      setErrorMsg('Please upload all required documents before proceeding.');
       return;
     }
     setErrorMsg('');
@@ -229,7 +275,86 @@ export default function CheckoutPage() {
               <h2 className="text-lg font-bold text-[#0F172A]">Payment Details</h2>
             </div>
 
+            {/* ── Required Documents Section ── */}
+            {requiredDocTypes.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className={`material-symbols-outlined text-lg ${allDocsReady ? 'text-green-500' : 'text-amber-500'}`}>
+                    {allDocsReady ? 'verified' : 'description'}
+                  </span>
+                  <p className="text-sm font-bold text-slate-800">Required Documents</p>
+                  {allDocsReady && (
+                    <span className="ml-auto text-[10px] font-bold text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                      All Verified ✓
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  {requiredDocTypes.map((docType) => {
+                    const isUploaded = !!uploadedDocs[docType];
+                    const uploadState = docUploadState[docType] ?? (isUploaded ? 'done' : 'idle');
+                    return (
+                      <div
+                        key={docType}
+                        className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                          isUploaded
+                            ? 'bg-green-50 border-green-200'
+                            : uploadState === 'error'
+                            ? 'bg-red-50 border-red-200'
+                            : 'bg-slate-50 border-slate-200'
+                        }`}
+                      >
+                        <span className={`material-symbols-outlined text-xl ${
+                          isUploaded ? 'text-green-500' : uploadState === 'error' ? 'text-red-500' : 'text-slate-400'
+                        }`}>
+                          {isUploaded ? 'check_circle' : uploadState === 'error' ? 'error' : 'upload_file'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-slate-800">{docType}</p>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {isUploaded ? 'Document uploaded ✓' : uploadState === 'uploading' ? 'Uploading…' : uploadState === 'error' ? 'Upload failed — try again' : 'Required for this rental'}
+                          </p>
+                        </div>
+                        {!isUploaded && (
+                          <>
+                            <input
+                              type="file"
+                              accept="image/*,application/pdf"
+                              className="hidden"
+                              ref={(el) => { fileInputRefs.current[docType] = el; }}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleDocUpload(docType, file);
+                              }}
+                            />
+                            <button
+                              type="button"
+                              disabled={uploadState === 'uploading'}
+                              onClick={() => fileInputRefs.current[docType]?.click()}
+                              className="shrink-0 px-3 py-1.5 text-[11px] font-bold bg-[#F97316] hover:bg-orange-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {uploadState === 'uploading' ? 'Uploading…' : uploadState === 'error' ? 'Retry' : 'Upload'}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {!allDocsReady && (
+                  <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <span className="material-symbols-outlined text-amber-500 text-base">info</span>
+                    <p className="text-xs text-amber-700">Upload all required documents to proceed to payment.</p>
+                  </div>
+                )}
+                <div className="h-px bg-slate-100" />
+              </div>
+            )}
+
             <form onSubmit={handlePay} className="space-y-5">
+
 
               {/* Card Number */}
               <div>

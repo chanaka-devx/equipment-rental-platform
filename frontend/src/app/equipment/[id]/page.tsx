@@ -19,6 +19,8 @@ interface Equipment {
   category?: { name: string };
   images?: string[];
   specifications?: Record<string, any>;
+  requiresDocuments?: boolean;
+  requiredDocumentTypes?: string[];
 }
 
 export default function EquipmentDetailsPage() {
@@ -81,6 +83,8 @@ export default function EquipmentDetailsPage() {
       rentalPrice: equipment.rentalPrice,
       deposit: equipment.deposit,
       images: equipment.images,
+      requiresDocuments: equipment.requiresDocuments,
+      requiredDocumentTypes: equipment.requiredDocumentTypes,
     });
   };
 

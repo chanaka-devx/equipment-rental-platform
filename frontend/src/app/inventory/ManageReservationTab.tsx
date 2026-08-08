@@ -326,6 +326,38 @@ function InventoryDetailModal({
               </div>
             </div>
 
+            {/* Customer Uploaded Documents */}
+            {(() => {
+              const docs = reservation.user?.uploadedDocuments as Record<string, string> | null | undefined;
+              const entries = docs ? Object.entries(docs) : [];
+              if (entries.length === 0) return null;
+              return (
+                <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                    <span className="material-symbols-outlined text-base text-[#F97316]">badge</span>
+                    Customer Identity Documents
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {entries.map(([docType, url]) => (
+                      <a
+                        key={docType}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-2.5 bg-white border border-slate-200 rounded-lg hover:border-[#F97316] hover:bg-orange-50 transition-colors group"
+                      >
+                        <span className="material-symbols-outlined text-slate-400 group-hover:text-[#F97316] text-lg transition-colors">open_in_new</span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-700 truncate">{docType}</p>
+                          <p className="text-[10px] text-slate-400">Click to view</p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Payment summary */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-white border border-slate-200 rounded-xl p-4 text-xs">
               <div>

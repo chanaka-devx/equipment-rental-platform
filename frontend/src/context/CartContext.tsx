@@ -13,6 +13,8 @@ export interface Equipment {
   quantity?: number | null;
   images?: string[];
   category?: string;
+  requiresDocuments?: boolean;
+  requiredDocumentTypes?: string[];
 }
 
 export interface CartItem {
