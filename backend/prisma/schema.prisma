@@ -6,6 +6,118 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id                  String              @id @default(uuid())
+  name                String
+  email               String              @unique
+  password            String
+  role                Role                @default(CUSTOMER)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  activityLogs        ActivityLog[]
+  reservations        Reservation[]
+  recordedDamages     EquipmentDamage[]   @relation("RecordedByUser")
+  recordedMaintenance MaintenanceRecord[] @relation("RecordedByUser")
+}
+
+model Category {
+  id        String      @id @default(uuid())
+  name      String      @unique
+  equipment Equipment[]
+}
+
+model Equipment {
+  id                 String              @id @default(uuid())
+  name               String
+  description        String
+  images             String[]
+  rentalPrice        Decimal             @db.Decimal(12, 2)
+  deposit            Decimal             @db.Decimal(12, 2)
+  stockQuantity      Int
+  available          Boolean             @default(true)
+  specifications     Json?
+  categoryId         String
+  createdAt          DateTime            @default(now())
+  qrCodeUrl          String?
+  category           Category            @relation(fields: [categoryId], references: [id])
+  reservationItems   ReservationItem[]
+  damageRecords      EquipmentDamage[]
+  maintenanceRecords MaintenanceRecord[]
+
+  @@index([categoryId])
+}
+
+model Reservation {
+  id        String            @id @default(uuid())
+  userId    String
+  status    ReservationStatus @default(PENDING)
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime          @default(now())
+  payment   Payment?
+  user      User              @relation(fields: [userId], references: [id])
+  items     ReservationItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+model ReservationItem {
+  id               String            @id @default(uuid())
+  reservationId    String
+  equipmentId      String
+  quantity         Int               @default(1)
+  unitPrice        Decimal           @db.Decimal(12, 2)
+  returnedQuantity Int               @default(0)
+  damagedQuantity  Int               @default(0)
+  equipment        Equipment         @relation(fields: [equipmentId], references: [id])
+  reservation      Reservation       @relation(fields: [reservationId], references: [id])
+  damageRecords    EquipmentDamage[]
+
+  @@index([reservationId])
+  @@index([equipmentId])
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  reservationId String        @unique
+  amount        Decimal       @db.Decimal(12, 2)
+  status        PaymentStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  reservation   Reservation   @relation(fields: [reservationId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Upload {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  url       String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  details   Json?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
 
 enum Role {
   ADMIN
@@ -30,112 +142,49 @@ enum PaymentStatus {
   REFUNDED
 }
 
-model User {
-  id           String        @id @default(uuid())
-  name         String
-  email        String        @unique
-  password     String
-  role         Role          @default(CUSTOMER)
-  reservations Reservation[]
-  activityLogs ActivityLog[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+enum DamageStatus {
+  DAMAGED
+  UNDER_MAINTENANCE
+  REPAIRED
 }
 
-model Category {
-  id        String      @id @default(uuid())
-  name      String      @unique
-  equipment Equipment[]
+enum MaintenanceStatus {
+  UNDER_MAINTENANCE
+  COMPLETED
 }
 
-model Equipment {
-  id               String            @id @default(uuid())
-  name             String
-  description      String
-  images           String[]
-  rentalPrice      Decimal           @db.Decimal(12, 2)
-  deposit          Decimal           @db.Decimal(12, 2)
-  stockQuantity    Int
-  available        Boolean           @default(true)
-  specifications   Json?
-  categoryId       String
-  category         Category          @relation(fields: [categoryId], references: [id])
-  reservationItems ReservationItem[]
-  qrCodeUrl        String?
-  createdAt        DateTime          @default(now())
 
-  @@index([categoryId])
-}
 
-model Reservation {
-  id           String             @id @default(uuid())
-  userId       String
-  user         User               @relation(fields: [userId], references: [id])
-  status       ReservationStatus  @default(PENDING)
-  startDate    DateTime
-  endDate      DateTime
-  items        ReservationItem[]
-  payment      Payment?
-  createdAt    DateTime           @default(now())
+model EquipmentDamage {
+  id                String           @id @default(uuid())
+  equipmentId       String
+  reservationItemId String?
+  description       String
+  quantity          Int
+  status            DamageStatus     @default(DAMAGED)
+  recordedById      String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  equipment         Equipment        @relation(fields: [equipmentId], references: [id])
+  reservationItem   ReservationItem? @relation(fields: [reservationItemId], references: [id])
+  recordedBy        User             @relation("RecordedByUser", fields: [recordedById], references: [id])
 
-  @@index([userId])
-  @@index([status])
-  @@index([startDate, endDate]) 
-}
-
-model ReservationItem {
-  id            String      @id @default(uuid())
-  reservationId String
-  reservation   Reservation @relation(fields: [reservationId], references: [id])
-  equipmentId   String
-  equipment     Equipment   @relation(fields: [equipmentId], references: [id])
-  quantity      Int         @default(1)
-  unitPrice     Decimal     @db.Decimal(12, 2) 
-  returnedQuantity Int      @default(0)
-  damagedQuantity  Int      @default(0)
-
-  @@index([reservationId])
   @@index([equipmentId])
+  @@index([status])
 }
 
-model Payment {
-  id            String        @id @default(uuid())
-  reservationId String        @unique
-  reservation   Reservation   @relation(fields: [reservationId], references: [id])
-  amount        Decimal       @db.Decimal(12, 2)
-  status        PaymentStatus @default(PENDING)
-  createdAt     DateTime      @default(now())
+model MaintenanceRecord {
+  id           String            @id @default(uuid())
+  equipmentId  String
+  description  String
+  quantity     Int
+  status       MaintenanceStatus @default(UNDER_MAINTENANCE)
+  recordedById String
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  equipment    Equipment         @relation(fields: [equipmentId], references: [id])
+  recordedBy   User              @relation("RecordedByUser", fields: [recordedById], references: [id])
+
+  @@index([equipmentId])
+  @@index([status])
 }
-
-model Notification {
-  id        String   @id @default(uuid())
-  userId    String
-  message   String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-}
-
-model Upload {
-  id        String   @id @default(uuid())
-  userId    String
-  type      String   // "ID_DOCUMENT" | "RENTAL_AGREEMENT" | "EQUIPMENT_IMAGE"
-  url       String
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-}
-
-model ActivityLog {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  action    String
-  details   Json?
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-}
-
-

@@ -1,41 +1,62 @@
 import { Injectable } from '@nestjs/common';
 import { InventoryRepository } from './inventory.repository';
-import { PrismaService } from '../prisma/prisma.service';
+import { DamageStatus, MaintenanceStatus } from '@prisma/client';
 
 @Injectable()
 export class InventoryService {
-  constructor(
-    private readonly inventoryRepository: InventoryRepository,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly inventoryRepository: InventoryRepository) {}
 
-  async receiveEquipment(equipmentId: string, quantity: number, userId: string) {
-    await this.inventoryRepository.adjustStock(equipmentId, quantity); // increase total owned
-    await this.logAction(userId, 'INVENTORY_RECEIVED', { equipmentId, quantity });
+  // ─── Stock ────────────────────────────────────────────────────────────────
+
+  listEquipmentWithStock() {
+    return this.inventoryRepository.listEquipmentWithStock();
   }
 
-  async releaseEquipment(equipmentId: string, quantity: number, userId: string) {
-    await this.inventoryRepository.adjustStock(equipmentId, -quantity); // e.g. sold off, decommissioned
-    await this.logAction(userId, 'INVENTORY_RELEASED', { equipmentId, quantity });
+  receiveEquipment(equipmentId: string, quantity: number) {
+    return this.inventoryRepository.adjustStock(equipmentId, quantity);
   }
 
-  async recordDamage(equipmentId: string, note: string, userId: string, quantity: number = 1) {
-    await this.inventoryRepository.adjustStock(equipmentId, -quantity); 
-    await this.logAction(userId, 'DAMAGE_RECORDED', { equipmentId, note, quantity });
+  releaseEquipment(equipmentId: string, quantity: number) {
+    return this.inventoryRepository.adjustStock(equipmentId, -quantity);
   }
 
-  async recordMaintenance(equipmentId: string, note: string, userId: string, quantity: number = 1) {
-    await this.inventoryRepository.adjustStock(equipmentId, quantity); 
-    await this.logAction(userId, 'MAINTENANCE_COMPLETED', { equipmentId, note, quantity });
+  // ─── Damage ───────────────────────────────────────────────────────────────
+
+  createDamage(data: {
+    equipmentId: string;
+    reservationItemId?: string;
+    description: string;
+    quantity: number;
+    recordedById: string;
+  }) {
+    return this.inventoryRepository.createDamage(data);
   }
 
-  private async logAction(userId: string, action: string, details: any) {
-    return this.prisma.activityLog.create({
-      data: {
-        userId,
-        action,
-        details,
-      },
-    });
+  listDamages(equipmentId?: string, status?: DamageStatus) {
+    return this.inventoryRepository.listDamages(equipmentId, status);
+  }
+
+  updateDamageStatus(id: string, status: DamageStatus) {
+    return this.inventoryRepository.updateDamageStatus(id, status);
+  }
+
+  // ─── Maintenance ──────────────────────────────────────────────────────────
+
+  createMaintenance(data: {
+    equipmentId: string;
+    description: string;
+    quantity: number;
+    recordedById: string;
+  }) {
+    return this.inventoryRepository.createMaintenance(data);
+  }
+
+  listMaintenance(equipmentId?: string, status?: MaintenanceStatus) {
+    return this.inventoryRepository.listMaintenance(equipmentId, status);
+  }
+
+  updateMaintenanceStatus(id: string, status: MaintenanceStatus) {
+    return this.inventoryRepository.updateMaintenanceStatus(id, status);
   }
 }
+
