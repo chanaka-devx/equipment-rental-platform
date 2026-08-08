@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsInt, IsUUID, IsOptional, Min, IsArray } from 'class-validator';
+import { IsString, IsNumber, IsInt, IsUUID, IsOptional, Min, IsArray, IsBoolean } from 'class-validator';
 
 export class CreateEquipmentDto {
   @IsString() name: string;
@@ -18,4 +18,13 @@ export class CreateEquipmentDto {
   @IsOptional()
   @IsString()
   qrCodeUrl?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  requiresDocuments?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  requiredDocumentTypes?: string[];
 }
