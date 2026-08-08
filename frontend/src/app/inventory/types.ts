@@ -20,7 +20,7 @@ export interface Reservation {
   id: string;
   orderNumber?: string;
   fullName?: string;
-  user?: { id?: string; name?: string; email?: string };
+  user?: { id?: string; name?: string; email?: string; uploadedDocuments?: any };
   equipment?: { name?: string; images?: string[] };
   equipmentName?: string;
   items?: ReservationItem[];

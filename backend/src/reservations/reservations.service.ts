@@ -86,7 +86,6 @@ export class ReservationsService {
       await this.notificationsService.queueNotification(updated.userId, 'Your reservation has been approved!');
     } else if (newStatus === 'CANCELLED') {
       await this.notificationsService.queueNotification(updated.userId, 'Your reservation has been cancelled and is ready for refund.');
-    }
     } else if (newStatus === 'REJECTED') {
       await this.notificationsService.queueNotification(updated.userId, 'Your reservation was rejected.');
     } else if (newStatus === 'ACTIVE') {

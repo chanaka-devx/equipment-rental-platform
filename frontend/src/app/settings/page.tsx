@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import api from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -26,6 +27,37 @@ export default function SettingsPage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // ── Document upload state ──────────────────────────────────────────────────
+  const [uploadedDocs, setUploadedDocs] = useState<Record<string, string>>({});
+  const [docUploadState, setDocUploadState] = useState<Record<string, 'idle' | 'uploading' | 'done' | 'error'>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  useEffect(() => {
+    if (!user) return;
+    api.get('/auth/me').then((res) => {
+      setUploadedDocs((res.data?.uploadedDocuments as Record<string, string>) ?? {});
+    }).catch(() => {});
+  }, [user]);
+
+  const handleDocUpload = async (docType: string, file: File) => {
+    setDocUploadState((prev) => ({ ...prev, [docType]: 'uploading' }));
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'ID_DOCUMENT');
+      const res = await api.post('/uploads', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const url: string = res.data?.url ?? res.data?.data?.url ?? '';
+      await api.patch('/auth/me/documents', { documents: { [docType]: url } });
+      setUploadedDocs((prev) => ({ ...prev, [docType]: url }));
+      setDocUploadState((prev) => ({ ...prev, [docType]: 'done' }));
+    } catch {
+      setDocUploadState((prev) => ({ ...prev, [docType]: 'error' }));
+    }
+  };
+
+  const PREDEFINED_DOC_TYPES = ['NIC', 'Driving License', 'Passport'];
+  // ──────────────────────────────────────────────────────────────────────────
 
   return (
     <ProtectedRoute>
@@ -141,6 +173,74 @@ export default function SettingsPage() {
                             disabled
                             className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 font-medium cursor-not-allowed"
                           />
+                        </div>
+                      </div>
+                      <hr className="border-slate-100" />
+
+                      {/* Identity Documents */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="text-base font-bold text-[#0F172A]">Identity Documents</h3>
+                        </div>
+                        <p className="text-xs text-slate-500 mb-5">Upload documents required for renting equipment (e.g., NIC, Driving License)</p>
+                        
+                        <div className="space-y-3">
+                          {PREDEFINED_DOC_TYPES.map((docType) => {
+                            const isUploaded = !!uploadedDocs[docType];
+                            const uploadState = docUploadState[docType] ?? (isUploaded ? 'done' : 'idle');
+                            return (
+                              <div
+                                key={docType}
+                                className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                                  isUploaded
+                                    ? 'bg-green-50 border-green-200'
+                                    : uploadState === 'error'
+                                    ? 'bg-red-50 border-red-200'
+                                    : 'bg-slate-50 border-slate-200'
+                                }`}
+                              >
+                                <span className={`material-symbols-outlined text-xl ${
+                                  isUploaded ? 'text-green-500' : uploadState === 'error' ? 'text-red-500' : 'text-slate-400'
+                                }`}>
+                                  {isUploaded ? 'check_circle' : uploadState === 'error' ? 'error' : 'badge'}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-bold text-slate-800">{docType}</p>
+                                  {isUploaded ? (
+                                    <a href={uploadedDocs[docType]} target="_blank" rel="noopener noreferrer" className="text-xs text-green-700 hover:underline">
+                                      View Document
+                                    </a>
+                                  ) : (
+                                    <p className="text-[10px] text-slate-500 truncate">
+                                      {uploadState === 'uploading' ? 'Uploading…' : uploadState === 'error' ? 'Upload failed — try again' : 'Not uploaded'}
+                                    </p>
+                                  )}
+                                </div>
+                                <input
+                                  type="file"
+                                  accept="image/*,application/pdf"
+                                  className="hidden"
+                                  ref={(el) => { fileInputRefs.current[docType] = el; }}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleDocUpload(docType, file);
+                                  }}
+                                />
+                                <button
+                                  type="button"
+                                  disabled={uploadState === 'uploading'}
+                                  onClick={() => fileInputRefs.current[docType]?.click()}
+                                  className={`shrink-0 px-4 py-2 text-xs font-bold rounded-lg transition-colors ${
+                                    isUploaded
+                                      ? 'bg-white border border-green-200 text-green-700 hover:bg-green-50'
+                                      : 'bg-[#F97316] text-white hover:bg-orange-600'
+                                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                >
+                                  {uploadState === 'uploading' ? 'Uploading…' : uploadState === 'error' ? 'Retry' : isUploaded ? 'Update' : 'Upload'}
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 

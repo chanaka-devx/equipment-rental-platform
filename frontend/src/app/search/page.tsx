@@ -17,6 +17,8 @@ interface Equipment {
   deposit?: number;
   images?: string[];
   category?: { name: string };
+  requiresDocuments?: boolean;
+  requiredDocumentTypes?: string[];
 }
 
 function SearchResults() {
@@ -127,6 +129,8 @@ function SearchResults() {
                             rentalPrice: item.rentalPrice,
                             deposit: item.deposit,
                             images: item.images,
+                            requiresDocuments: item.requiresDocuments,
+                            requiredDocumentTypes: item.requiredDocumentTypes,
                           });
                         }}
                         className="text-xs font-bold text-slate-700 hover:text-[#F97316] transition-colors focus:outline-none flex items-center gap-1 relative z-10"

@@ -27,6 +27,8 @@ interface Equipment {
   specifications?: Record<string, any>;
   qrCodeUrl?: string;
   createdAt?: string;
+  requiresDocuments?: boolean;
+  requiredDocumentTypes?: string[];
 }
 
 // ─── Availability Badge ───────────────────────────────────────────────
@@ -60,6 +62,12 @@ function EquipmentModal({
     stockQuantity: String(initial?.stockQuantity ?? ''),
     categoryId: initial?.categoryId ?? initial?.category?.id ?? '',
   });
+
+  // Document requirement state
+  const [requiresDocuments, setRequiresDocuments] = useState(initial?.requiresDocuments ?? false);
+  const [docTypesInput, setDocTypesInput] = useState(
+    (initial?.requiredDocumentTypes ?? []).join(', ')
+  );
 
   const [specs, setSpecs] = useState<{key: string, value: string}[]>(
     Object.entries(initial?.specifications || {}).map(([key, value]) => ({ key, value: String(value) }))
@@ -148,6 +156,10 @@ function EquipmentModal({
         stockQuantity: parseInt(form.stockQuantity, 10),
         categoryId: form.categoryId,
         specifications: Object.keys(specifications).length > 0 ? specifications : undefined,
+        requiresDocuments,
+        requiredDocumentTypes: requiresDocuments
+          ? docTypesInput.split(',').map((s) => s.trim()).filter(Boolean)
+          : [],
       };
       if (imageUrls.length) payload.images = imageUrls;
 
@@ -275,6 +287,51 @@ function EquipmentModal({
                   ))}
                 </select>
               </div>
+            </div>
+
+            {/* ── Document Requirements ─────────────────────────────── */}
+            <div className="border border-slate-200 rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRequiresDocuments((v) => !v)}
+                  className={`relative w-10 h-5 rounded-full transition-colors ${
+                    requiresDocuments ? 'bg-[#F97316]' : 'bg-slate-200'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                      requiresDocuments ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+                <label className="text-sm font-semibold text-slate-700 cursor-pointer" onClick={() => setRequiresDocuments((v) => !v)}>
+                  Requires Identity Document
+                </label>
+              </div>
+              {requiresDocuments && (
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                    Required Document Types
+                    <span className="normal-case font-normal text-slate-400 ml-1">(comma-separated, e.g. NIC, Driving License)</span>
+                  </label>
+                  <input
+                    value={docTypesInput}
+                    onChange={(e) => setDocTypesInput(e.target.value)}
+                    placeholder="NIC, Driving License, Passport..."
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:border-[#F97316] focus:ring-1 focus:ring-orange-200 outline-none transition-all"
+                  />
+                  {docTypesInput.trim() && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {docTypesInput.split(',').map((t) => t.trim()).filter(Boolean).map((type) => (
+                        <span key={type} className="px-2 py-0.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-full text-[11px] font-semibold">
+                          {type}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Specifications / Features */}
