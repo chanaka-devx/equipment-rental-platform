@@ -59,7 +59,7 @@ function SearchResults() {
 
         {/* States */}
         {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-6">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-pulse">
                 <div className="aspect-square bg-slate-100" />
@@ -91,7 +91,7 @@ function SearchResults() {
         {!loading && results.length > 0 && (
           <>
             <p className="text-sm text-slate-500 mb-6">{results.length} result{results.length !== 1 ? 's' : ''} found</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-6">
               {results.map(item => (
                 <div
                   key={item.id}

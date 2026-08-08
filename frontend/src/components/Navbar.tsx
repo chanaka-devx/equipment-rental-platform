@@ -229,15 +229,15 @@ export default function Navbar() {
                 <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
               </>
             ) : (
-              <div className="flex items-center gap-2">
+              <Link href="/login" className="flex items-center gap-2 hover:text-[#F97316] transition-colors">
                 <span className="material-symbols-outlined text-2xl text-slate-700">person</span>
-                <div className="flex flex-col text-left">
+                <div className="hidden md:flex flex-col text-left">
                   <span className="text-[11px] text-slate-500 leading-tight">Sign in / Join Free</span>
-                  <Link href="/login" className="text-xs font-bold text-[#F97316] hover:underline flex items-center gap-0.5">
+                  <span className="text-xs font-bold text-[#F97316] hover:underline flex items-center gap-0.5">
                     My Account <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
-                  </Link>
+                  </span>
                 </div>
-              </div>
+              </Link>
             )}
           </div>
 
@@ -250,6 +250,31 @@ export default function Navbar() {
             <span className="material-symbols-outlined text-2xl">{mobileMenuOpen ? 'close' : 'menu'}</span>
           </button>
         </div>
+      </div>
+
+      {/* Mobile Search Bar (Below TIER 2, outside menu) */}
+      <div className="md:hidden px-4 pb-3">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (searchQuery.trim()) window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
+          }}
+          className="w-full flex items-center"
+        >
+          <div className="relative w-full flex items-center">
+            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none">search</span>
+            <input
+              type="text"
+              placeholder="Search Equipment..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-100 border border-slate-300 rounded-l-md pl-11 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent focus:bg-white transition-all"
+            />
+            <button type="submit" className="bg-[#F97316] hover:bg-orange-600 text-white font-bold text-sm px-4 py-2.5 rounded-r-md transition-colors shrink-0">
+              Search
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* TIER 3: Category Bar */}
@@ -268,49 +293,7 @@ export default function Navbar() {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white border-t border-slate-200 px-4 py-4 space-y-4">
-          <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
-            <input
-              type="text"
-              placeholder="Search Equipment..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-100 border border-slate-200 rounded-md pl-10 pr-4 py-2 text-sm text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F97316]"
-            />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Navigation</p>
-            <div className="flex flex-col gap-2">
-              {user ? (
-                <>
-                  {['ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR'].includes(user.role) && (
-                    <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Dashboard</Link>
-                  )}
-                  <Link href="/equipment" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Equipment</Link>
-                  {['ADMIN', 'STAFF'].includes(user.role) && (
-                    <Link href="/reservations" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Reservations</Link>
-                  )}
-                  {['ADMIN', 'STAFF'].includes(user.role) && (
-                    <Link href="/customers" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Customers</Link>
-                  )}
-                  {['ADMIN', 'WAREHOUSE_OPERATOR'].includes(user.role) && (
-                    <Link href="/inventory" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Inventory</Link>
-                  )}
-                  {user.role === 'ADMIN' && (
-                    <Link href="/payments" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Payments</Link>
-                  )}
-                  {['ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR'].includes(user.role) && (
-                    <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Settings</Link>
-                  )}
-                </>
-              ) : (
-                <>
-                  <Link href="/equipment" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Equipment</Link>
-                  <Link href="/contact" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-slate-700 hover:text-[#F97316]">Contact</Link>
-                </>
-              )}
-            </div>
-          </div>
+
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Equipment Categories</p>
             <div className="grid grid-cols-2 gap-2">
@@ -330,7 +313,6 @@ export default function Navbar() {
             {user ? (
               <div className="flex flex-col gap-2">
                 <span className="text-xs text-slate-500">Signed in as <strong className="text-slate-800">{user.email}</strong></span>
-                <button onClick={() => { setMobileMenuOpen(false); window.location.href = '/settings'; }} className="text-left text-sm font-bold text-slate-600">Settings</button>
               </div>
             ) : (
               <div className="flex items-center gap-3">
