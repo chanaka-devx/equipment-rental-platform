@@ -48,10 +48,10 @@ export default function CartModal({ open, onClose }: CartModalProps) {
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-full mt-3 w-[390px] bg-white border border-slate-200 rounded-2xl shadow-2xl z-[300] flex flex-col max-h-[82vh] overflow-hidden"
+      className="absolute -right-20 sm:right-0 top-full mt-3 w-[360px] sm:w-[390px] max-w-[calc(100vw-1rem)] bg-white border border-slate-200 rounded-2xl shadow-2xl z-[300] flex flex-col max-h-[82vh] overflow-hidden"
     >
       {/* Notch */}
-      <div className="absolute -top-2 right-5 w-4 h-4 bg-white border-l border-t border-slate-200 rotate-45 z-10" />
+      <div className="absolute -top-2 right-[85px] sm:right-5 w-4 h-4 bg-white border-l border-t border-slate-200 rotate-45 z-10" />
 
       {/* Header */}
       <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">

@@ -151,7 +151,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Equipment Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-6">
                   {catItems.map(item => (
                     <div 
                       key={item.id} 
@@ -189,6 +189,7 @@ export default function LandingPage() {
                                 name: item.name,
                                 description: item.description,
                                 rentalPrice: item.rentalPrice,
+                                deposit: item.deposit,
                                 images: item.images,
                               });
                             }}

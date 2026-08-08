@@ -77,10 +77,10 @@ export default function NotificationsModal({ open, onClose, onUnreadCountChange 
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-full mt-3 w-[360px] max-w-[calc(100vw-2rem)] bg-white border border-slate-200 rounded-2xl shadow-2xl z-[300] flex flex-col max-h-[70vh] overflow-hidden"
+      className="absolute -right-10 sm:right-0 top-full mt-3 w-[340px] sm:w-[360px] max-w-[calc(100vw-1rem)] bg-white border border-slate-200 rounded-2xl shadow-2xl z-[300] flex flex-col max-h-[70vh] overflow-hidden"
     >
       {/* Notch */}
-      <div className="absolute -top-2 right-10 w-4 h-4 bg-white border-l border-t border-slate-200 rotate-45 z-10" />
+      <div className="absolute -top-2 right-[50px] sm:right-10 w-4 h-4 bg-white border-l border-t border-slate-200 rotate-45 z-10" />
 
       {/* Header */}
       <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between shrink-0">
