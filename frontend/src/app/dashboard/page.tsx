@@ -179,9 +179,12 @@ export default function DashboardPage() {
   });
   const [resStats, setResStats] = useState({
     total: 0,
+    pending: 0,
+    approved: 0,
     active: 0,
     completed: 0,
     cancelled: 0,
+    rejected: 0,
     totalRevenue: 0,
     todayReservations: 0,
     todayRevenue: 0,
@@ -194,42 +197,48 @@ export default function DashboardPage() {
   const fetchStats = useCallback(async () => {
     setLoading(true);
     try {
-      const [eqRes, resRes] = await Promise.all([
+      const [eqRes, resRes, mntRes] = await Promise.all([
         api.get('/equipment?limit=200').catch(() => ({ data: null })),
         api.get('/reservations?limit=1000').catch(() => ({ data: null })),
+        api.get('/inventory/maintenance').catch(() => ({ data: null })),
       ]);
 
       const items: any[] = eqRes.data?.items || (Array.isArray(eqRes.data) ? eqRes.data : []);
       const available = items.filter(
         (i) => (i.available ?? (i.stockQuantity > 0)) === true
       ).length;
-      const rented = items.filter(
-        (i) => (i.available ?? (i.stockQuantity > 0)) === false
-      ).length;
       const lowStock = items.filter(
         (i) => (i.stockQuantity !== undefined ? i.stockQuantity <= 2 : false)
       ).length;
+
+      const reservations: any[] = resRes.data?.items || (Array.isArray(resRes.data) ? resRes.data : []);
+      const rented = reservations.filter(r => r.status === 'ACTIVE').length;
+
+      const maintenanceRecords: any[] = Array.isArray(mntRes.data) ? mntRes.data : [];
+      const maintenance = maintenanceRecords.filter(m => m.status !== 'COMPLETED').length;
 
       setStats({
         totalEquipment: items.length,
         available,
         rented,
-        maintenance: 0,
+        maintenance,
         lowStock,
       });
 
-      const reservations: any[] = resRes.data?.items || (Array.isArray(resRes.data) ? resRes.data : []);
       
-      let active = 0, completed = 0, cancelled = 0;
+      let pending = 0, approved = 0, active = 0, completed = 0, cancelled = 0, rejected = 0;
       let totalRev = 0;
       let todayRes = 0;
       let todayRev = 0;
       const todayStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
       reservations.forEach(r => {
-        if (r.status === 'PENDING' || r.status === 'APPROVED' || r.status === 'ACTIVE') active++;
-        else if (r.status === 'COMPLETED') completed++;
-        else cancelled++;
+        if (r.status === 'ACTIVE') active++;
+        else if (r.status === 'PENDING') pending++;
+        else if (r.status === 'APPROVED') approved++;
+        else if (r.status === 'RETURNED' || r.status === 'COMPLETED') completed++;
+        else if (r.status === 'CANCELLED') cancelled++;
+        else if (r.status === 'REJECTED') rejected++;
 
         const dateStr = new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         if (dateStr === todayStr) {
@@ -252,7 +261,7 @@ export default function DashboardPage() {
           }
         }
       });
-      setResStats({ total: reservations.length, active, completed, cancelled, totalRevenue: totalRev, todayReservations: todayRes, todayRevenue: todayRev });
+      setResStats({ total: reservations.length, pending, approved, active, completed, cancelled, rejected, totalRevenue: totalRev, todayReservations: todayRes, todayRevenue: todayRev });
 
       const revArray = Array.from(revMap.entries()).map(([label, value]) => ({ label, value })).slice(-7);
       setRevenueData(revArray.length ? revArray : [
@@ -270,7 +279,7 @@ export default function DashboardPage() {
                 name: i.equipment?.name || 'Unknown', 
                 price: `Rs.${i.unitPrice || i.equipment?.rentalPrice || 0}/day`, 
                 bookings: 0,
-                img: i.equipment?.imageUrl || 'https://pub-ec99c8a8fe684a6a931dd2f902e53e4b.r2.dev/Application%20images/tools%20(1).png'
+                img: i.equipment?.images[0]
               });
             }
             popMap.get(eqId).bookings += 1;
@@ -305,10 +314,10 @@ export default function DashboardPage() {
     { time: '04:30 PM', duration: '30 min', type: 'New Reservation', item: 'Construction Mixer', color: 'bg-orange-500' },
   ];
 
-  const displayTotal = stats.totalEquipment || 126;
-  const displayAvailable = stats.available || 63;
-  const displayRented = stats.rented || 32;
-  const displayMaint = stats.maintenance || 31;
+  const displayTotal = stats.totalEquipment || 0;
+  const displayAvailable = stats.available || 0;
+  const displayRented = stats.rented || 0;
+  const displayMaint = stats.maintenance || 0;
 
   return (
     <ProtectedRoute>
@@ -436,54 +445,36 @@ export default function DashboardPage() {
                   </select>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {/* Bar Chart */}
-                  <div className="flex-1">
-                    {/* Y-axis + bars */}
-                    <div className="flex gap-2 h-32 items-end">
-                      <div className="flex flex-col justify-between h-full text-right shrink-0">
-                        {['Rs.5k', 'Rs.4k', 'Rs.3k', 'Rs.2k', 'Rs.1k', 'Rs.0'].map((l) => (
-                          <span key={l} className="text-[9px] text-slate-300">{l}</span>
-                        ))}
-                      </div>
-                      <div className="flex-1">
-                        <BarChart data={revenueData} />
-                      </div>
-                    </div>
+                {/* Summary */}
+                <div className="pt-4 sm:pt-0 sm:pl-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 w-full">
+                  <div>
+                    <p className="text-2xl font-extrabold text-[#0F172A]">Rs.{(resStats.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    <p className="text-xs text-slate-400">Total Revenue</p>
                   </div>
 
-                  {/* Summary */}
-                  <div className="sm:w-[140px] shrink-0 border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0 sm:pl-5 flex flex-col justify-between">
-                    <div>
-                      <p className="text-2xl font-extrabold text-[#0F172A]">Rs.{(resStats.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                      <p className="text-xs text-slate-400 mb-4">Total Revenue</p>
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
-                            <span className="material-symbols-outlined text-xs text-green-600">payments</span>
-                          </div>
-                          <div>
-                            <p className="text-xs font-extrabold text-[#0F172A]">Rs.{((resStats.totalRevenue || 0) * 0.9).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                            <p className="text-[10px] text-slate-400">Total Income</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
-                            <span className="material-symbols-outlined text-xs text-red-500">trending_down</span>
-                          </div>
-                          <div>
-                            <p className="text-xs font-extrabold text-[#0F172A]">Rs.25,580</p>
-                            <p className="text-[10px] text-slate-400">Total Expenses</p>
-                          </div>
-                        </div>
+                  <div className="flex flex-row items-center gap-8">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[18px] text-green-600">payments</span>
+                      </div>
+                      <div>
+                        <p className="text-base font-extrabold text-[#0F172A]">Rs.{((resStats.totalRevenue || 0) * 0.9).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        <p className="text-xs text-slate-400">Total Income</p>
                       </div>
                     </div>
-                    <button className="mt-4 w-full flex items-center justify-center gap-1.5 text-[10px] font-bold text-[#F97316] border border-[#F97316]/40 rounded-lg py-1.5 hover:bg-orange-50 transition-colors">
-                      <span className="material-symbols-outlined text-xs">download</span>
-                      Download Report
-                    </button>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[18px] text-red-500">trending_down</span>
+                      </div>
+                      <div>
+                        <p className="text-base font-extrabold text-[#0F172A]">Rs.500</p>
+                        <p className="text-xs text-slate-400">Total Expenses</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
+                
               </div>
 
               {/* Recent Reservations */}
@@ -612,16 +603,22 @@ export default function DashboardPage() {
                     centerText={resStats.active.toString()}
                     centerSubtext="Active"
                     segments={[
+                      { value: resStats.pending, color: '#F59E0B' },
+                      { value: resStats.approved, color: '#3B82F6' },
                       { value: resStats.active, color: '#3B82F6' },
                       { value: resStats.completed, color: '#F97316' },
                       { value: resStats.cancelled, color: '#EF4444' },
+                      { value: resStats.rejected, color: '#EF4444' },
                     ]}
                   />
                   <div className="space-y-2">
                     {[
-                      { label: 'Active', value: resStats.active, color: 'bg-blue-500' },
-                      { label: 'Completed', value: resStats.completed, color: 'bg-[#F97316]' },
+                      { label: 'Pending', value: resStats.pending, color: 'bg-[#F59E0B]' },
+                      { label: 'Approved', value: resStats.approved, color: 'bg-[#3B82F6]' },
+                      { label: 'Active', value: resStats.active, color: 'bg-blue-600' },
+                      { label: 'Returned', value: resStats.completed, color: 'bg-[#F97316]' },
                       { label: 'Cancelled', value: resStats.cancelled, color: 'bg-red-500' },
+                      { label: 'Rejected', value: resStats.rejected, color: 'bg-red-700' },
                     ].map((s) => (
                       <div key={s.label} className="flex items-center gap-2 text-xs">
                         <div className={`w-2 h-2 rounded-full shrink-0 ${s.color}`} />
@@ -630,41 +627,6 @@ export default function DashboardPage() {
                       </div>
                     ))}
                   </div>
-                </div>
-              </div>
-
-              {/* Equipment Overview */}
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-extrabold text-[#0F172A]">Equipment</h3>
-                  <Link href="/equipment" className="text-[10px] text-[#F97316] font-bold hover:underline">View All</Link>
-                </div>
-                <p className="text-[10px] text-slate-400 mb-3">from {displayTotal} total items</p>
-
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-3xl font-extrabold text-[#0F172A]">{displayAvailable}</span>
-                  <span className="text-xs text-green-600 font-bold">▲ 5.2%</span>
-                </div>
-                <p className="text-[10px] text-slate-400 mb-3">Available right now</p>
-
-                {/* Segmented Progress Bar */}
-                <div className="w-full h-2 rounded-full flex overflow-hidden gap-px mb-2">
-                  <div
-                    className="bg-green-500 rounded-l-full"
-                    style={{ width: `${(displayAvailable / displayTotal) * 100}%` }}
-                  />
-                  <div
-                    className="bg-[#F97316]"
-                    style={{ width: `${(displayRented / displayTotal) * 100}%` }}
-                  />
-                  <div
-                    className="bg-red-500 rounded-r-full flex-1"
-                  />
-                </div>
-                <div className="flex justify-between text-[10px] text-slate-500">
-                  <span>Available <span className="font-extrabold text-green-600">{displayAvailable}</span></span>
-                  <span>Rented <span className="font-extrabold text-[#F97316]">{displayRented}</span></span>
-                  <span>Maint. <span className="font-extrabold text-red-500">{displayMaint}</span></span>
                 </div>
               </div>
 

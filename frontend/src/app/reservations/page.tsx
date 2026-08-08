@@ -310,15 +310,6 @@ function ReservationDetailModal({
               </button>
             )}
 
-            {(reservation.status?.toUpperCase() === 'PENDING' || reservation.status?.toUpperCase() === 'APPROVED') && (
-              <button
-                onClick={() => handleUpdateStatus('CANCELLED')}
-                disabled={updating}
-                className="px-3.5 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-xs font-bold transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-            )}
           </div>
         </div>
 
@@ -434,19 +425,22 @@ function ActionMenu({
             </button>
           )}
 
-          {(s === 'PENDING' || s === 'APPROVED') && (
+          {(s === 'CANCELLED' || s === 'REJECTED') && reservation.payment?.status === 'PAID' && (
             <button
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-600 hover:bg-red-50 transition-colors"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-purple-600 hover:bg-purple-50 font-semibold transition-colors"
               onClick={async () => {
+                if (!reservation.payment?.id) return;
                 try {
-                  await api.patch(`/reservations/${reservation.id}/status`, { status: 'CANCELLED' });
+                  await api.patch(`/payments/${reservation.payment.id}/refund`);
                   onRefresh();
-                } catch {}
+                } catch (err: any) {
+                  alert(err.response?.data?.message || 'Refund failed');
+                }
                 setOpen(false);
               }}
             >
-              <span className="material-symbols-outlined text-sm">cancel</span>
-              Cancel
+              <span className="material-symbols-outlined text-sm">payments</span>
+              Refund
             </button>
           )}
         </div>
