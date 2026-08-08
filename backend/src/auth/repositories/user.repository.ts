@@ -23,4 +23,14 @@ export class UserRepository {
       data,
     });
   }
+
+  async updateDocuments(userId: string, newDocs: Record<string, string>): Promise<User> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const existing = (user?.uploadedDocuments as Record<string, string>) ?? {};
+    const merged = { ...existing, ...newDocs };
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { uploadedDocuments: merged },
+    });
+  }
 }

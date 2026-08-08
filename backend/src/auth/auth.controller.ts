@@ -1,8 +1,9 @@
-import { Controller, VERSION_NEUTRAL, Post, Body, Logger, InternalServerErrorException } from '@nestjs/common';
+import { Controller, VERSION_NEUTRAL, Post, Get, Patch, Body, Logger, Request, UseGuards, InternalServerErrorException } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller({ path: 'auth', version: ['1', VERSION_NEUTRAL] })
 export class AuthController {
@@ -33,5 +34,20 @@ export class AuthController {
   @Post('forgot-password')
   async forgotPassword(@Body('email') email: string) {
     return this.authService.forgotPassword(email);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async getMe(@Request() req) {
+    return this.authService.getMe(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/documents')
+  async updateDocuments(
+    @Request() req,
+    @Body() body: { documents: Record<string, string> },
+  ) {
+    return this.authService.updateDocuments(req.user.userId, body.documents);
   }
 }

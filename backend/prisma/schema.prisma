@@ -12,6 +12,7 @@ model User {
   email               String              @unique
   password            String
   role                Role                @default(CUSTOMER)
+  uploadedDocuments   Json?               // { "NIC": "url", "Driving License": "url" }
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   activityLogs        ActivityLog[]
@@ -27,22 +28,24 @@ model Category {
 }
 
 model Equipment {
-  id                 String              @id @default(uuid())
-  name               String
-  description        String
-  images             String[]
-  rentalPrice        Decimal             @db.Decimal(12, 2)
-  deposit            Decimal             @db.Decimal(12, 2)
-  stockQuantity      Int
-  available          Boolean             @default(true)
-  specifications     Json?
-  categoryId         String
-  createdAt          DateTime            @default(now())
-  qrCodeUrl          String?
-  category           Category            @relation(fields: [categoryId], references: [id])
-  reservationItems   ReservationItem[]
-  damageRecords      EquipmentDamage[]
-  maintenanceRecords MaintenanceRecord[]
+  id                      String              @id @default(uuid())
+  name                    String
+  description             String
+  images                  String[]
+  rentalPrice             Decimal             @db.Decimal(12, 2)
+  deposit                 Decimal             @db.Decimal(12, 2)
+  stockQuantity           Int
+  available               Boolean             @default(true)
+  specifications          Json?
+  categoryId              String
+  createdAt               DateTime            @default(now())
+  qrCodeUrl               String?
+  requiresDocuments       Boolean             @default(false)
+  requiredDocumentTypes   String[]            @default([])
+  category                Category            @relation(fields: [categoryId], references: [id])
+  reservationItems        ReservationItem[]
+  damageRecords           EquipmentDamage[]
+  maintenanceRecords      MaintenanceRecord[]
 
   @@index([categoryId])
 }

@@ -12,6 +12,19 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  async getMe(userId: string) {
+    const user = await this.userRepository.findById(userId);
+    if (!user) throw new UnauthorizedException('User not found');
+    const { password: _, ...result } = user;
+    return result;
+  }
+
+  async updateDocuments(userId: string, docs: Record<string, string>) {
+    const user = await this.userRepository.updateDocuments(userId, docs);
+    const { password: _, ...result } = user;
+    return result;
+  }
+
   async register(registerDto: RegisterDto) {
     const { name, email, password } = registerDto;
 
