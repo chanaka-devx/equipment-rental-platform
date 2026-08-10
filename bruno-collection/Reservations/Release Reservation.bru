@@ -1,11 +1,11 @@
 meta {
-  name: Staff Only
+  name: Release Reservation
   type: http
-  seq: 2
+  seq: 8
 }
 
-get {
-  url: {{base_url}}/staff-only
+patch {
+  url: {{base_url}}/reservations/:id/release
   body: none
   auth: bearer
 }

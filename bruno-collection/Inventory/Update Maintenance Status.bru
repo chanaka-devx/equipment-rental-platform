@@ -1,0 +1,22 @@
+meta {
+  name: Update Maintenance Status
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{base_url}}/inventory/maintenance/:id/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "status": "COMPLETED",
+    "notes": "Oil changed."
+  }
+}
