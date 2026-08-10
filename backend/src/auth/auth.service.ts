@@ -57,14 +57,14 @@ export class AuthService {
     const user = await this.userRepository.findByEmail(email);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid Email');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     // 2. Compare password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid Password');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     // 3. Generate JWT
@@ -75,8 +75,8 @@ export class AuthService {
       refresh_token: await this.jwtService.signAsync(
         { sub: user.id },
         {
-          secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret',
-          expiresIn: (process.env.JWT_REFRESH_EXPIRY || '7d') as any,
+          secret: process.env.JWT_REFRESH_SECRET,
+          expiresIn: (process.env.JWT_REFRESH_EXPIRY) as any,
         },
       ),
       user: {
@@ -90,7 +90,7 @@ export class AuthService {
 
   async refresh(refreshToken: string) {
     try {
-      const payload = this.jwtService.verify(refreshToken, { secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret' });
+      const payload = this.jwtService.verify(refreshToken, { secret: process.env.JWT_REFRESH_SECRET});
       const user = await this.userRepository.findById(payload.sub);
       
       if (!user) {
@@ -99,7 +99,7 @@ export class AuthService {
 
       const accessToken = this.jwtService.sign(
         { sub: user.id, email: user.email, role: user.role },
-        { secret: process.env.JWT_ACCESS_SECRET || 'secret', expiresIn: (process.env.JWT_ACCESS_EXPIRY || '15m') as any },
+        { secret: process.env.JWT_ACCESS_SECRET, expiresIn: (process.env.JWT_ACCESS_EXPIRY) as any },
       );
       return { access_token: accessToken };
     } catch {
@@ -113,7 +113,7 @@ export class AuthService {
 
     const resetToken = this.jwtService.sign(
       { sub: user.id },
-      { secret: process.env.JWT_ACCESS_SECRET || 'secret', expiresIn: '15m' },
+      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: (process.env.JWT_ACCESS_EXPIRY) as any },
     );
 
     console.log(`Password reset link: http://localhost:3000/reset-password?token=${resetToken}`);

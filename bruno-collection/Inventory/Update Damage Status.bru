@@ -1,0 +1,22 @@
+meta {
+  name: Update Damage Status
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{base_url}}/inventory/damages/:id/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "status": "RESOLVED",
+    "resolution": "Fixed the scratch"
+  }
+}

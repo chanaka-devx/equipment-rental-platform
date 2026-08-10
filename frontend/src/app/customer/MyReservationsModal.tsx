@@ -22,6 +22,20 @@ export default function MyReservationsModal({ open, onClose }: MyReservationsMod
   const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const handleCancel = async (id: string) => {
+    if (!window.confirm('Are you sure you want to cancel this reservation?')) return;
+    setCancellingId(id);
+    try {
+      await api.patch(`/reservations/${id}/cancel`);
+      setReservations(prev => prev.map(r => r.id === id ? { ...r, status: 'CANCELLED' } : r));
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to cancel reservation');
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -119,12 +133,23 @@ export default function MyReservationsModal({ open, onClose }: MyReservationsMod
                     <p className="text-xs font-bold text-[#F97316] mt-1">Rs.{Number(total).toFixed(2)}</p>
                   </div>
 
-                  {/* Payment badge */}
-                  {r.payment && (
-                    <div className={`shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg ${r.payment.status === 'PAID' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                      {r.payment.status === 'PAID' ? '✓ Paid' : 'Pending'}
-                    </div>
-                  )}
+                  {/* Actions & Payment */}
+                  <div className="shrink-0 flex flex-col items-end gap-2">
+                    {r.payment && (
+                      <div className={`text-[10px] font-bold px-2 py-1 rounded-lg ${r.payment.status === 'PAID' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {r.payment.status === 'PAID' ? '✓ Paid' : 'Pending'}
+                      </div>
+                    )}
+                    {(r.status === 'PENDING' || r.status === 'APPROVED') && (
+                      <button
+                        onClick={() => handleCancel(r.id)}
+                        disabled={cancellingId === r.id}
+                        className="text-[10px] font-bold px-2 py-1 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                      >
+                        {cancellingId === r.id ? 'Cancelling...' : 'Cancel'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}

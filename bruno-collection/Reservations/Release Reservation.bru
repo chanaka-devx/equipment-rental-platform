@@ -1,0 +1,15 @@
+meta {
+  name: Release Reservation
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{base_url}}/reservations/:id/release
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}

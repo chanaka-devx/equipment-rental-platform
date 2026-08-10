@@ -12,8 +12,8 @@ class AccountScreen extends StatefulWidget {
 
 class _AccountScreenState extends State<AccountScreen> {
   final AuthService _authService = AuthService();
-  String _userName = 'John Doe';
-  String _userEmail = 'Acme Construction Corp'; // Used as secondary text based on design
+  String _userName = '';
+  String _userEmail = '';
   bool _isLoading = true;
 
   @override
@@ -25,8 +25,8 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _loadUserInfo() async {
     final userInfo = await _authService.getUserInfo();
     setState(() {
-      _userName = userInfo['name'] ?? 'John Doe';
-      _userEmail = userInfo['email'] ?? 'Acme Construction Corp';
+      _userName = userInfo['name'] ?? '';
+      _userEmail = userInfo['email'] ?? '';
       _isLoading = false;
     });
   }

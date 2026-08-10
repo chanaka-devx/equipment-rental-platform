@@ -1,0 +1,22 @@
+meta {
+  name: Return Reservation
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{base_url}}/reservations/:id/return
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+body:json {
+  {
+    "condition": "Good",
+    "notes": "Returned on time."
+  }
+}

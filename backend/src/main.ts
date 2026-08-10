@@ -1,5 +1,4 @@
-// Allow self-signed SSL certs (required for Aiven PostgreSQL)
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 import * as dotenv from 'dotenv';
 dotenv.config();
 import { NestFactory } from '@nestjs/core';

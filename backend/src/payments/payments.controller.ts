@@ -12,6 +12,7 @@ export class PaymentsController {
   @Post(':reservationId/initiate')
   initiate(@Param('reservationId') id: string) { return this.paymentsService.initiatePayment(id); }
 
+  @Roles('ADMIN', 'STAFF')
   @Patch(':id/simulate')
   simulate(@Param('id') id: string, @Body('outcome') outcome: 'PAID' | 'FAILED') {
     return this.paymentsService.simulatePaymentResult(id, outcome);

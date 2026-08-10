@@ -19,6 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   late int _currentIndex;
   bool _isStaff = false;
   bool _isLoading = true;
+  final _cartKey = GlobalKey<CartScreenState>();
 
   @override
   void initState() {
@@ -35,21 +36,34 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  int get _cartTabIndex => _isStaff ? 2 : 1;
+
   List<Widget> get _screens {
+    final cartScreen = CartScreen(key: _cartKey);
     if (_isStaff) {
       return [
         EquipmentListScreen(),
         const StaffReservationsScreen(),
-        const CartScreen(),
+        cartScreen,
         const AccountScreen(),
       ];
     } else {
       return [
         EquipmentListScreen(),
-        const CartScreen(),
+        cartScreen,
         const AccountScreen(),
       ];
     }
+  }
+
+  void _onTabTap(int index) {
+    // If the cart tab is tapped, always reload the cart data
+    if (index == _cartTabIndex) {
+      _cartKey.currentState?.loadCart();
+    }
+    setState(() {
+      _currentIndex = index;
+    });
   }
 
   @override
@@ -66,11 +80,7 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
         isStaff: _isStaff,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onTap: _onTabTap,
       ),
     );
   }

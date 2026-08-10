@@ -29,6 +29,7 @@ export class ReservationsController {
     return this.reservationsService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.reservationsService.findOne(id);

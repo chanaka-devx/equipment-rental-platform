@@ -1,18 +1,19 @@
 meta {
-  name: Refresh Token
+  name: Login
   type: http
-  seq: 3
+  seq: 2
 }
 
 post {
-  url: http://localhost:3000/v1/auth/refresh
+  url: {{base_url}}/auth/login
   body: json
   auth: none
 }
 
 body:json {
   {
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMzVlNzYzMC00ZGYwLTQzZmItYjYxNS01MGY4NDc0ZGU2ZTgiLCJpYXQiOjE3ODU0Mzc1ODcsImV4cCI6MTc4NjA0MjM4N30.qm0bCqxM1B96MKgLTLBogdDkT_lXdrihGGFsW8Ysozw"
+    "email": "customer@test.com",
+    "password": "Password123!"
   }
 }
 
