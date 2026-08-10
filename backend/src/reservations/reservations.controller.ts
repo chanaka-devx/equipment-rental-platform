@@ -29,6 +29,8 @@ export class ReservationsController {
     return this.reservationsService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'STAFF', 'WAREHOUSE_OPERATOR')
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.reservationsService.findOne(id);
