@@ -38,26 +38,8 @@ class AuthService {
     if (res.statusCode != 201 && res.statusCode != 200) {
       throw Exception('Registration failed');
     }
-    final data = jsonDecode(res.body);
-    
-    // Support both camelCase and snake_case depending on API changes
-    final accessToken = data['access_token'] ?? data['accessToken'];
-    final refreshToken = data['refresh_token'] ?? data['refreshToken'];
-    
-    if (accessToken != null) {
-      await storage.write(key: 'accessToken', value: accessToken);
-    }
-    if (refreshToken != null) {
-      await storage.write(key: 'refreshToken', value: refreshToken);
-    }
-    
-    if (data['user'] != null) {
-      await storage.write(key: 'userName', value: data['user']['name']?.toString());
-      await storage.write(key: 'userEmail', value: data['user']['email']?.toString());
-      await storage.write(key: 'userRole', value: data['user']['role']?.toString());
-    }
-
-    return data;
+    // Automatically log in to obtain tokens and persist user details.
+    return await login(email, password);
   }
 
   Future<void> logout() async {

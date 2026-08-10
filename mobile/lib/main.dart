@@ -2,26 +2,30 @@ import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/main_screen.dart';
-import 'screens/equipment_list_screen.dart';
 import 'screens/my_reservations_screen.dart';
 import 'screens/staff_reservations_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/account_screen.dart';
+import 'services/auth_service.dart';
 import 'theme.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final authService = AuthService();
+  final loggedIn = await authService.isLoggedIn();
+  runApp(MyApp(initialRoute: loggedIn ? '/home' : '/login'));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String initialRoute;
+  const MyApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Equipment Rental Platform',
+      title: 'RentForge',
       theme: AppTheme.lightTheme,
-      initialRoute: '/login',
+      initialRoute: initialRoute,
       routes: {
         '/login': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),
