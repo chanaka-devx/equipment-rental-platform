@@ -14,8 +14,8 @@ dotenv.config();
     PrismaModule,
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_ACCESS_SECRET || 'secret',
-      signOptions: { expiresIn: (process.env.JWT_ACCESS_EXPIRY || '15m') as any },
+      secret: process.env.JWT_ACCESS_SECRET,
+      signOptions: { expiresIn: (process.env.JWT_ACCESS_EXPIRY) as any },
     }),
   ],
   controllers: [AuthController],

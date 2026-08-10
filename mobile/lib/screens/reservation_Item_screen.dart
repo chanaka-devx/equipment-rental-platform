@@ -28,7 +28,7 @@ class _ReservationItemScreenState extends State<ReservationItemScreen> {
     setState(() => _isLoading = true);
     try {
       final res = await _apiService.patch(
-        '/reservations/${_reservation['id']}', 
+        '/reservations/${_reservation['id']}/status', 
         {'status': newStatus}
       );
       if (res.statusCode == 200 || res.statusCode == 201) {

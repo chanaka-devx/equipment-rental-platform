@@ -90,7 +90,7 @@ export class AuthService {
 
   async refresh(refreshToken: string) {
     try {
-      const payload = this.jwtService.verify(refreshToken, { secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret' });
+      const payload = this.jwtService.verify(refreshToken, { secret: process.env.JWT_REFRESH_SECRET});
       const user = await this.userRepository.findById(payload.sub);
       
       if (!user) {
